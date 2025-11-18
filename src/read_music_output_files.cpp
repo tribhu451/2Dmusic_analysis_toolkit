@@ -1,7 +1,7 @@
 #include "read_music_output_files.h"
 #include "event.h"
 
-read_music_output_files::read_music_output_files(std::vector<std::string>  aa_music_output_paths, int mNpt): music_pt_bins(mNpt){
+read_music_output_files::read_music_output_files(std::vector<std::string>  aa_music_output_paths){
   music_output_paths = aa_music_output_paths ;
      
   // now set how many events do you have

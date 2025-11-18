@@ -11,7 +11,7 @@
 class read_music_output_files{
 
   public :
-    read_music_output_files(std::vector<std::string>  aa, int);
+    read_music_output_files(std::vector<std::string>  aa);
     inline int get_music_pit_bins(){return music_pt_bins;};
     inline int get_total_music_events(){return total_music_events;};
     std::vector<double> get_music_ptvals(){return ptval;};
