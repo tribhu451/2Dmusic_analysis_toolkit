@@ -3,15 +3,16 @@
 #include <vector>
 #include "event.h"
 #include "read_music_output_files.h"
+#include "observables.h"
 
 
 int main(int argc, char **argv){
 
  int MUSICptbins = 30 ; 
- int yflag = 0 ; 
+ int yflag = 1 ; 
  double rapmin = -0.5 ; 
  double rapmax =  0.5 ; 
- double ptmin  =  0.0 ; 
+ double ptmin  =  0.01 ; 
  double ptmax  =  3.0 ; 
 
  std::cout << "========================" << std::endl ; 
@@ -51,9 +52,16 @@ int main(int argc, char **argv){
  
  
  read_music_output_files* rmof = new read_music_output_files(music_output_paths,MUSICptbins); 
- //rmof->read_pt_differential_stuff_for_hpm(/*int yflag, double rapmin, double rapmax*/);
- //rmof->read_pt_integrated_stuff_for_hpm(/*int yflag, double rapmin, double rapmax, double ptmin, double ptmax*/ );
+ rmof->read_pt_differential_stuff_for_hpm(yflag, rapmin, rapmax);
+ rmof->read_pt_integrated_stuff_for_hpm( yflag,  rapmin,  rapmax,  ptmin,  ptmax );
+ rmof->read_meanpt_for_hpm( yflag,  rapmin,  rapmax,  ptmin,  ptmax );
  
-  
+ observables* obj = new observables(rmof);
+ obj->calculate_meanpt_v2sq_correlation();
+ 
  return 0 ;  
 }
+
+
+
+

@@ -13,7 +13,7 @@ LIBS          = $(SYSLIBS) $(GSLLIBS)
 vpath %.cpp src
 objdir     = obj
 
-SRC        = main.cpp event.cpp read_music_output_files.cpp
+SRC        = main.cpp event.cpp read_music_output_files.cpp observables.cpp
              
 OBJS       = $(patsubst %.cpp,$(objdir)/%.o,$(SRC)) 
               
