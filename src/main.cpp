@@ -12,7 +12,7 @@ int main(int argc, char **argv){
  int yflag = 1 ; 
  double rapmin = -0.5 ; 
  double rapmax =  0.5 ; 
- double ptmin  =  0.01 ; 
+ double ptmin  =  0.2 ; 
  double ptmax  =  3.0 ; 
 
  std::cout << "========================" << std::endl ; 
@@ -57,7 +57,8 @@ int main(int argc, char **argv){
  rmof->read_meanpt_for_hpm( yflag,  rapmin,  rapmax,  ptmin,  ptmax );
  
  observables* obj = new observables(rmof);
- obj->calculate_meanpt_v2sq_correlation();
+ obj->output_meanpt_v2sq_correlation();
+ obj->output_meanpt_v3sq_correlation();
  
  return 0 ;  
 }

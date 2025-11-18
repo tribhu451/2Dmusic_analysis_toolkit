@@ -15,7 +15,7 @@ class event{
  
     inline void set_integrated_vn(int iharmonics, int real_img, double val ){ vn[iharmonics][real_img] = val;}
     inline void set_differential_vn(int iharmonics, int real_img, int ptbinIDX, double val ){ vnpt[iharmonics][real_img][ptbinIDX] = val;}
-    inline void set_meanpt(int val){meanpt=val;}
+    inline void set_meanpt(double val){meanpt=val;}
     
   private :
     int Nharmonics = 5 ; 
