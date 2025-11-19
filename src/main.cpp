@@ -58,6 +58,8 @@ int main(int argc, char **argv){
  observables* obj = new observables(rmof);
  obj->output_meanpt_v2sq_correlation();
  obj->output_meanpt_v3sq_correlation();
+ obj->output_pt_diff_meanpt_v2v2pt_correlation();
+ obj->output_pt_diff_meanpt_v3v3pt_correlation();
  
  return 0 ;  
 }
