@@ -17,7 +17,6 @@ observables::observables(read_music_output_files* armof, int apid, int ayflag, d
   */
 }
 
-
 std::vector<int> observables::get_an_event_ensemble(){
   std::vector<int> event_ID_ens;
   for(int ii=0; ii<rmof->get_total_music_events(); ii++){
@@ -27,14 +26,13 @@ std::vector<int> observables::get_an_event_ensemble(){
   return event_ID_ens;
 }
 
-
-void observables::output_meanpt_v2sq_correlation(){
+void observables::output_meanpt_vnsq_correlation(int n){
 
  // create an ensemble
  std::vector<int> event_ID_ens;
  
- double meanpt_v2sq_corr_of_one_ens ; // x
- double Cov_Mpt_v2v2star; // y            
+ double meanpt_vnsq_corr_of_one_ens ; // x
+ double Cov_Mpt_vnvnstar; // y            
  double sumx = 0 ; 
  double sumx2 = 0 ; 
  double sumy = 0 ; 
@@ -42,8 +40,8 @@ void observables::output_meanpt_v2sq_correlation(){
  
  double Mpt;                           
  double M_ptsq;                      
- double M_v2v2star;                   
- double M_v2v2starsq;                 
+ double M_vnvnstar;                   
+ double M_vnvnstarsq;                 
 
  // <[pt]>
  double sumA = 0. ; 
@@ -53,25 +51,24 @@ void observables::output_meanpt_v2sq_correlation(){
  double sumB = 0. ; 
  double sumB2 = 0. ; 
  
- // <v2 * v2star>
+ // <vn * vnstar>
  double sumC = 0. ; 
  double sumC2 = 0. ; 
 
- // (delta v2*v2star)^2
+ // (delta vn*vnstar)^2
  double sumD = 0. ;                 
  double sumD2 = 0. ; 
 
  for(int ii=0; ii<rmof->get_total_music_events(); ii++){
-    //std::cout << ii << "  " << event_ID_ens[ii] << std::endl ; 
     event_ID_ens = get_an_event_ensemble();
     // calculate correlation of a given ensemble
-    calculate_meanpt_v2sq_correlation(event_ID_ens, Mpt, M_ptsq, M_v2v2star, M_v2v2starsq, Cov_Mpt_v2v2star, meanpt_v2sq_corr_of_one_ens);
+    calculate_meanpt_vnsq_correlation(n,event_ID_ens, Mpt, M_ptsq, M_vnvnstar, M_vnvnstarsq, Cov_Mpt_vnvnstar, meanpt_vnsq_corr_of_one_ens);
     
-    sumx  += meanpt_v2sq_corr_of_one_ens ; 
-    sumx2 += pow(meanpt_v2sq_corr_of_one_ens,2); 
+    sumx  += meanpt_vnsq_corr_of_one_ens ; 
+    sumx2 += pow(meanpt_vnsq_corr_of_one_ens,2); 
     
-    sumy  += Cov_Mpt_v2v2star ; 
-    sumy2 += pow(Cov_Mpt_v2v2star,2); 
+    sumy  += Cov_Mpt_vnvnstar ; 
+    sumy2 += pow(Cov_Mpt_vnvnstar,2); 
 
     sumA  += Mpt ;
     sumA2 += Mpt * Mpt ; 
@@ -79,24 +76,24 @@ void observables::output_meanpt_v2sq_correlation(){
     sumB  += (M_ptsq - Mpt*Mpt) ; 
     sumB2 += ( (M_ptsq - Mpt*Mpt) * (M_ptsq - Mpt*Mpt) ) ; 
 
-    sumC  += M_v2v2star ; 
-    sumC2 += M_v2v2star * M_v2v2star ; 
+    sumC  += M_vnvnstar ; 
+    sumC2 += M_vnvnstar * M_vnvnstar ; 
 
-    sumD  += ( M_v2v2starsq - M_v2v2star * M_v2v2star ) ; 
-    sumD2 += ( ( M_v2v2starsq - M_v2v2star * M_v2v2star ) * ( M_v2v2starsq - M_v2v2star * M_v2v2star ) ) ; 
+    sumD  += ( M_vnvnstarsq - M_vnvnstar * M_vnvnstar ) ; 
+    sumD2 += ( ( M_vnvnstarsq - M_vnvnstar * M_vnvnstar ) * ( M_vnvnstarsq - M_vnvnstar * M_vnvnstar ) ) ; 
  }
  
   std::ofstream mFile;
   std::stringstream output_filename;
 
-  // calculate mean and std. dev. of rho([pt], v2*v2star) and Cov([pt], v2*v2star)
+  // calculate mean and std. dev. of rho([pt], vn*vnstar) and Cov([pt], vn*vnstar)
   double Mean_cov = sumy / rmof->get_total_music_events() ; 
   double Erro_cov = sqrt( sumy2 / rmof->get_total_music_events() - pow(Mean_cov,2) ) ; 
   double Mean_rho = sumx / rmof->get_total_music_events() ; 
   double Erro_rho = sqrt( sumx2 / rmof->get_total_music_events() - pow(Mean_rho,2) ) ; 
   // write to file
   output_filename.str("");
-  output_filename << "results/Meanpt_v2v2star_correlation";
+  output_filename << "results/Meanpt_v" << n << "v" << n << "star_correlation";
   output_filename << "_pt_";
   output_filename << ptmin << "_" << ptmax ;
   if(yflag==1){
@@ -108,19 +105,43 @@ void observables::output_meanpt_v2sq_correlation(){
   output_filename << rapmin << "_" << rapmax ;
   output_filename << ".dat";
   mFile.open(output_filename.str().c_str(), std::ios::out );
-  mFile << "#Cov([pt],v2*v2star)   error   rho([pt], v2*v2star)   error" << std::endl ;
+  mFile << "#Cov([pt],vn*vnstar)   error   rho([pt], vn*vnstar)   error" << std::endl ;
   mFile << Mean_cov << "   " << Erro_cov << "   " << Mean_rho << "   " << Erro_rho << std::endl ; 
   mFile.close();
   
+  if(n==2){ // calculate once while calculating for n=2
+    // calculate mean and std. dev. of <[pt]> and <(delta[pt])^2>
+    double Mean_Mpt = sumA / rmof->get_total_music_events() ; 
+    double Erro_Mpt = sqrt( sumA2 / rmof->get_total_music_events() - pow(Mean_Mpt,2) ) ; 
+    double Mean_Dpt = sumB / rmof->get_total_music_events() ; 
+    double Erro_Dpt = sqrt( sumB2 / rmof->get_total_music_events() - pow(Mean_Dpt,2) ) ; 
+    // write to file
+    output_filename.str("");
+    output_filename << "results/Meanpt_and_DeltaMpt";
+    output_filename << "_pt_";
+    output_filename << ptmin << "_" << ptmax ;
+    if(yflag==1){
+     output_filename << "_y_" ;
+    }
+    else{
+     output_filename << "_eta_" ;
+    }
+    output_filename << rapmin << "_" << rapmax ;
+    output_filename << ".dat";
+    mFile.open(output_filename.str().c_str(), std::ios::out );
+    mFile << "#<[pt]>   error   <(delta [pt] )^2>   error" << std::endl ;
+    mFile << Mean_Mpt << "   " << Erro_Mpt << "   " << Mean_Dpt << "   " << Erro_Dpt << std::endl ; 
+    mFile.close();
+  }
   
-  // calculate mean and std. dev. of <[pt]> and <(delta[pt])^2>
-  double Mean_Mpt = sumA / rmof->get_total_music_events() ; 
-  double Erro_Mpt = sqrt( sumA2 / rmof->get_total_music_events() - pow(Mean_Mpt,2) ) ; 
-  double Mean_Dpt = sumB / rmof->get_total_music_events() ; 
-  double Erro_Dpt = sqrt( sumB2 / rmof->get_total_music_events() - pow(Mean_Dpt,2) ) ; 
+  // calculate mean and std. dev. of <vn*vnstar> and (delta vn*vnstar)^2
+  double Mean_vnvnstar = sumC / rmof->get_total_music_events() ; 
+  double Erro_vnvnstar = sqrt( sumC2 / rmof->get_total_music_events() - pow(Mean_vnvnstar,2) ) ; 
+  double Mean_deltavnvnstar = sumD / rmof->get_total_music_events() ; 
+  double Erro_deltavnvnstar = sqrt( sumD2 / rmof->get_total_music_events() - pow(Mean_deltavnvnstar,2) ) ; 
   // write to file
   output_filename.str("");
-  output_filename << "results/Meanpt_and_DeltaMpt";
+  output_filename << "results/Meanv" << n << "v" << n << "star_and_Deltav" << n << "v" << n << "star";
   output_filename << "_pt_";
   output_filename << ptmin << "_" << ptmax ;
   if(yflag==1){
@@ -132,299 +153,175 @@ void observables::output_meanpt_v2sq_correlation(){
   output_filename << rapmin << "_" << rapmax ;
   output_filename << ".dat";
   mFile.open(output_filename.str().c_str(), std::ios::out );
-  mFile << "#<[pt]>   error   <(delta [pt] )^2>   error" << std::endl ;
-  mFile << Mean_Mpt << "   " << Erro_Mpt << "   " << Mean_Dpt << "   " << Erro_Dpt << std::endl ; 
-  mFile.close();
-  
-  
-  // calculate mean and std. dev. of <v2*v2star> and (delta v2*v2star)^2
-  double Mean_v2v2star = sumC / rmof->get_total_music_events() ; 
-  double Erro_v2v2star = sqrt( sumC2 / rmof->get_total_music_events() - pow(Mean_v2v2star,2) ) ; 
-  double Mean_deltav2v2star = sumD / rmof->get_total_music_events() ; 
-  double Erro_deltav2v2star = sqrt( sumD2 / rmof->get_total_music_events() - pow(Mean_deltav2v2star,2) ) ; 
-  // write to file
-  output_filename.str("");
-  output_filename << "results/Meanv2v2star_and_Deltav2v2star";
-  output_filename << "_pt_";
-  output_filename << ptmin << "_" << ptmax ;
-  if(yflag==1){
-   output_filename << "_y_" ;
-  }
-  else{
-   output_filename << "_eta_" ;
-  }
-  output_filename << rapmin << "_" << rapmax ;
-  output_filename << ".dat";
-  mFile.open(output_filename.str().c_str(), std::ios::out );
-  mFile << "#<v2*v2star>   error   <(delta v2*v2star)^2>   error" << std::endl ;
-  mFile << Mean_v2v2star << "   " << Erro_v2v2star << "   " 
-  << Mean_deltav2v2star << "   " << Erro_deltav2v2star << std::endl ; 
+  mFile << "#<vn*vnstar>   error   <(delta vn*vnstar)^2>   error" << std::endl ;
+  mFile << Mean_vnvnstar << "   " << Erro_vnvnstar << "   " 
+  << Mean_deltavnvnstar << "   " << Erro_deltavnvnstar << std::endl ; 
   mFile.close();
 }
 
 
-void observables::calculate_meanpt_v2sq_correlation(std::vector<int> event_ID_ens, 
-     double&  Mpt, double&  M_ptsq,  double&  M_v2v2star,  double&  M_v2v2starsq, 
-     double& Cov_Mpt_v2v2star,   double& meanpt_v2sq_corr_of_one_ens){
-     
+void observables::calculate_meanpt_vnsq_correlation(int n, std::vector<int> event_ID_ens, 
+     double&  Mpt, double&  M_ptsq,  double&  M_vnvnstar,  double&  M_vnvnstarsq, 
+     double& Cov_Mpt_vnvnstar,   double& meanpt_vnsq_corr_of_one_ens){
   // calculate the observable for one ensemble //
   double sumpt = 0. ; 
   double sumptsq = 0. ; 
-  double sumv2v2star = 0. ; 
-  double sumv2v2starsq = 0. ; 
-  double sumptv2v2star = 0 ; 
+  double sumvnvnstar = 0. ; 
+  double sumvnvnstarsq = 0. ; 
+  double sumptvnvnstar = 0 ; 
    
   for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
     int eventID = event_ID_ens[ii] ; 
     event* ev = rmof->get_event(eventID) ; 
     double pt = ev->get_mean_pt();
-    double v2v2star = pow(ev->get_integrated_vn(2,0),2) + pow(ev->get_integrated_vn(2,1),2) ;  
+    double vnvnstar = pow(ev->get_integrated_vn(n,0),2) + pow(ev->get_integrated_vn(n,1),2) ;  
     sumpt += pt ; 
     sumptsq += pow(pt,2);
-    sumv2v2star += v2v2star ;  
-    sumv2v2starsq += pow(v2v2star,2) ; 
-    sumptv2v2star += ( pt * v2v2star ) ;  
+    sumvnvnstar += vnvnstar ;  
+    sumvnvnstarsq += pow(vnvnstar,2) ; 
+    sumptvnvnstar += ( pt * vnvnstar ) ;  
   }
   
   sumpt /= event_ID_ens.size() ; 
   sumptsq /= event_ID_ens.size() ; 
-  sumv2v2star /= event_ID_ens.size() ; 
-  sumv2v2starsq /= event_ID_ens.size() ; 
-  sumptv2v2star /= event_ID_ens.size() ; 
-  double num = sumptv2v2star - sumpt * sumv2v2star ; 
-  double den =  sqrt( ( sumv2v2starsq - sumv2v2star * sumv2v2star ) * ( sumptsq - sumpt * sumpt ) ) ;
+  sumvnvnstar /= event_ID_ens.size() ; 
+  sumvnvnstarsq /= event_ID_ens.size() ; 
+  sumptvnvnstar /= event_ID_ens.size() ; 
+  double num = sumptvnvnstar - sumpt * sumvnvnstar ; 
+  double den =  sqrt( ( sumvnvnstarsq - sumvnvnstar * sumvnvnstar ) * ( sumptsq - sumpt * sumpt ) ) ;
   
   Mpt =  sumpt ;                             // <p_t>
   M_ptsq = sumptsq ;                         // <p_t^2>
-  M_v2v2star = sumv2v2star ;                 // <(v_2 v_2^*)>
-  M_v2v2starsq = sumv2v2starsq ;             // <(v_2 v_2^*)^2>
-  Cov_Mpt_v2v2star = num ;                   // <p_t (v_2 v_2^*)> - <p_t> <(v_2 v_2^*)>
-  meanpt_v2sq_corr_of_one_ens = num / den ; 
+  M_vnvnstar = sumvnvnstar ;                 // <(v_n v_n^*)>
+  M_vnvnstarsq = sumvnvnstarsq ;             // <(v_n v_n^*)^2>
+  Cov_Mpt_vnvnstar = num ;                   // <p_t (v_n v_n^*)> - <p_t> <(v_n v_n^*)>
+  meanpt_vnsq_corr_of_one_ens = num / den ; 
 }
 
 
 
 
 
-
-void observables::output_meanpt_v3sq_correlation(){
-
+void observables::output_pt_diff_meanpt_vnvnpt_correlation(int n){
  // create an ensemble
  std::vector<int> event_ID_ens;
- 
- double meanpt_v3sq_corr_of_one_ens ; // x
- double Cov_Mpt_v3v3star; // y            
- double sumx = 0 ; 
- double sumx2 = 0 ; 
- double sumy = 0 ; 
- double sumy2 = 0 ; 
- 
- double Mpt;                           
- double M_ptsq;                      
- double M_v3v3star;                   
- double M_v3v3starsq;                 
-
- // <[pt]>
- double sumA = 0. ; 
- double sumA2 = 0. ; 
- 
- // (delta [pt])^2 = <[pt]^2> - <[pt]>^2
- double sumB = 0. ; 
- double sumB2 = 0. ; 
- 
- // <v3 * v3star>
- double sumC = 0. ; 
- double sumC2 = 0. ; 
-
- // (delta v3*v3star)^2
- double sumD = 0. ;                 
- double sumD2 = 0. ; 
-
- for(int ii=0; ii<rmof->get_total_music_events(); ii++){
-    //std::cout << ii << "  " << event_ID_ens[ii] << std::endl ; 
-    event_ID_ens = get_an_event_ensemble();
-    // calculate correlation of a given ensemble
-    calculate_meanpt_v3sq_correlation(event_ID_ens, Mpt, M_ptsq, M_v3v3star, M_v3v3starsq, Cov_Mpt_v3v3star, meanpt_v3sq_corr_of_one_ens);
-    
-    sumx  += meanpt_v3sq_corr_of_one_ens ; 
-    sumx2 += pow(meanpt_v3sq_corr_of_one_ens,2); 
-    
-    sumy  += Cov_Mpt_v3v3star ; 
-    sumy2 += pow(Cov_Mpt_v3v3star,2); 
-
-    sumA  += Mpt ;
-    sumA2 += Mpt * Mpt ; 
-
-    sumB  += (M_ptsq - Mpt*Mpt) ; 
-    sumB2 += ( (M_ptsq - Mpt*Mpt) * (M_ptsq - Mpt*Mpt) ) ; 
-
-    sumC  += M_v3v3star ; 
-    sumC2 += M_v3v3star * M_v3v3star ; 
-
-    sumD  += ( M_v3v3starsq - M_v3v3star * M_v3v3star ) ; 
-    sumD2 += ( ( M_v3v3starsq - M_v3v3star * M_v3v3star ) * ( M_v3v3starsq - M_v3v3star * M_v3v3star ) ) ; 
- }
- 
-  std::ofstream mFile;
-  std::stringstream output_filename;
-
-  // calculate mean and std. dev. of rho([pt], v2*v2star) and Cov([pt], v2*v2star)
-  double Mean_cov = sumy / rmof->get_total_music_events() ; 
-  double Erro_cov = sqrt( sumy2 / rmof->get_total_music_events() - pow(Mean_cov,2) ) ; 
-  double Mean_rho = sumx / rmof->get_total_music_events() ; 
-  double Erro_rho = sqrt( sumx2 / rmof->get_total_music_events() - pow(Mean_rho,2) ) ; 
-  // write to file
-  output_filename.str("");
-  output_filename << "results/Meanpt_v3v3star_correlation";
-  output_filename << "_pt_";
-  output_filename << ptmin << "_" << ptmax ;
-  if(yflag==1){
-   output_filename << "_y_" ;
-  }
-  else{
-   output_filename << "_eta_" ;
-  }
-  output_filename << rapmin << "_" << rapmax ;
-  output_filename << ".dat";
-  mFile.open(output_filename.str().c_str(), std::ios::out );
-  mFile << "#Cov([pt],v3*v3star)   error   rho([pt], v3*v3star)   error" << std::endl ;
-  mFile << Mean_cov << "   " << Erro_cov << "   " << Mean_rho << "   " << Erro_rho << std::endl ; 
-  mFile.close();
-  
-  
-  // calculate mean and std. dev. of <v3*v3star> and (delta v3*v3star)^2
-  double Mean_v3v3star = sumC / rmof->get_total_music_events() ; 
-  double Erro_v3v3star = sqrt( sumC2 / rmof->get_total_music_events() - pow(Mean_v3v3star,2) ) ; 
-  double Mean_deltav3v3star = sumD / rmof->get_total_music_events() ; 
-  double Erro_deltav3v3star = sqrt( sumD2 / rmof->get_total_music_events() - pow(Mean_deltav3v3star,2) ) ; 
-  // write to file
-  output_filename.str("");
-  output_filename << "results/Meanv3v3star_and_Deltav3v3star";
-  output_filename << "_pt_";
-  output_filename << ptmin << "_" << ptmax ;
-  if(yflag==1){
-   output_filename << "_y_" ;
-  }
-  else{
-   output_filename << "_eta_" ;
-  }
-  output_filename << rapmin << "_" << rapmax ;
-  output_filename << ".dat";
-  mFile.open(output_filename.str().c_str(), std::ios::out );
-  mFile << "#<v3*v3star>   error   <(delta v3*v3star)^2>   error" << std::endl ;
-  mFile << Mean_v3v3star << "   " << Erro_v3v3star << "   " 
-  << Mean_deltav3v3star << "   " << Erro_deltav3v3star << std::endl ; 
-  mFile.close();
-}
-
-
-void observables::calculate_meanpt_v3sq_correlation(std::vector<int> event_ID_ens, 
-     double&  Mpt, double&  M_ptsq,  double&  M_v3v3star,  double&  M_v3v3starsq, 
-     double& Cov_Mpt_v3v3star,   double& meanpt_v3sq_corr_of_one_ens){
-     
-  // calculate the observable for one ensemble //
-  double sumpt = 0. ; 
-  double sumptsq = 0. ; 
-  double sumv3v3star = 0. ; 
-  double sumv3v3starsq = 0. ; 
-  double sumptv3v3star = 0 ; 
-   
-  for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
-    int eventID = event_ID_ens[ii] ; 
-    event* ev = rmof->get_event(eventID) ; 
-    double pt = ev->get_mean_pt();
-    double v3v3star = pow(ev->get_integrated_vn(3,0),2) + pow(ev->get_integrated_vn(3,1),2) ;  
-    sumpt += pt ; 
-    sumptsq += pow(pt,2);
-    sumv3v3star += v3v3star ;  
-    sumv3v3starsq += pow(v3v3star,2) ; 
-    sumptv3v3star += ( pt * v3v3star ) ;  
-  }
-  
-  sumpt /= event_ID_ens.size() ; 
-  sumptsq /= event_ID_ens.size() ; 
-  sumv3v3star /= event_ID_ens.size() ; 
-  sumv3v3starsq /= event_ID_ens.size() ; 
-  sumptv3v3star /= event_ID_ens.size() ; 
-  double num = sumptv3v3star - sumpt * sumv3v3star ; 
-  double den =  sqrt( ( sumv3v3starsq - sumv3v3star * sumv3v3star ) * ( sumptsq - sumpt * sumpt ) ) ;
-  
-  Mpt =  sumpt ;                             // <p_t>
-  M_ptsq = sumptsq ;                         // <p_t^2>
-  M_v3v3star = sumv3v3star ;                 // <(v_3 v_3^*)>
-  M_v3v3starsq = sumv3v3starsq ;             // <(v_3 v_3^*)^2>
-  Cov_Mpt_v3v3star = num ;                   // <p_t (v_3 v_3^*)> - <p_t> <(v_3 v_3^*)>
-  meanpt_v3sq_corr_of_one_ens = num / den ; 
-}
-
-
-
-
-
-
-
-
-
-
-void observables::output_pt_diff_meanpt_v2v2pt_correlation(){
-
- // create an ensemble
- std::vector<int> event_ID_ens;
- std::vector<double> meanpt_v2v2pt_corr_of_one_ens;
+ std::vector<double> rho_meanpt_vnvnpt;
+ std::vector<double> cov_meanpt_vnvnpt;
+ std::vector<double> vnvnptstar;
+ std::vector<double> vnvnptstarsq;
 
  const int ptbins = rmof->get_music_pit_bins(); 
  double sumx[ptbins];
  double sumx2[ptbins];
+ double sumy[ptbins];
+ double sumy2[ptbins];
+ double sumA[ptbins];
+ double sumA2[ptbins];
+ double sumB[ptbins];
+ double sumB2[ptbins];
+ 
  for(int ii=0; ii<ptbins; ii++){
-   sumx[ii] = 0. ; sumx2[ii] = 0. ; 
-   meanpt_v2v2pt_corr_of_one_ens.push_back(0.);
+   sumx[ii] = 0. ; 
+   sumx2[ii] = 0. ; 
+   sumy[ii] = 0. ; 
+   sumy2[ii] = 0. ; 
+   sumA[ii] = 0. ; 
+   sumA2[ii] = 0. ;
+   sumB[ii] = 0. ; 
+   sumB2[ii] = 0. ;  
+   rho_meanpt_vnvnpt.push_back(0.);
+   cov_meanpt_vnvnpt.push_back(0.);
+   vnvnptstar.push_back(0.);
+   vnvnptstarsq.push_back(0.);
  }
   
  for(int ii=0; ii<rmof->get_total_music_events(); ii++){
     event_ID_ens = get_an_event_ensemble();
     // calculate correlation of a given ensemble
-    calculate_pt_diff_meanpt_v2v2pt_correlation(event_ID_ens,meanpt_v2v2pt_corr_of_one_ens);
+    calculate_pt_diff_meanpt_vnvnpt_correlation(n, event_ID_ens, vnvnptstar, vnvnptstarsq, cov_meanpt_vnvnpt, rho_meanpt_vnvnpt);
     for(int jj=0; jj<ptbins; jj++){
-      sumx[jj] += meanpt_v2v2pt_corr_of_one_ens[jj] ;
-      sumx2[jj] += pow(meanpt_v2v2pt_corr_of_one_ens[jj],2) ; 
+      sumx[jj]  += rho_meanpt_vnvnpt[jj] ;
+      sumx2[jj] += pow(rho_meanpt_vnvnpt[jj],2) ; 
+      sumy[jj]  += cov_meanpt_vnvnpt[jj] ;
+      sumy2[jj] += pow(cov_meanpt_vnvnpt[jj],2) ; 
+      sumA[jj]  += vnvnptstar[jj] ;
+      sumA2[jj] += pow(vnvnptstar[jj],2) ; 
+      sumB[jj]  += ( vnvnptstarsq[jj] - pow(vnvnptstar[jj],2) )  ;
+      sumB2[jj] += ( vnvnptstarsq[jj] - pow(vnvnptstar[jj],2) ) * ( vnvnptstarsq[jj] - pow(vnvnptstar[jj],2) ) ; 
     }
  }
  
- 
-  // calculate mean and std. dev. and print
   std::ofstream mFile;
   std::stringstream output_filename;
+
+  // calculate mean and std. dev. of cov( [pt],vn vn*(pt) ) &  rho( [pt],vn vn*(pt) )  
+  // and print
   output_filename.str("");
-  output_filename << "results/mpt_v2v2pt_correlation_with_pt.dat";
+  output_filename << "results/Meanpt_v" << n << "v" << n << "ptstar_correlation" ;
+  output_filename << "_pt_";
+  output_filename << ptmin << "_" << ptmax ;
+  if(yflag==1){
+   output_filename << "_y_" ;
+  }
+  else{
+   output_filename << "_eta_" ;
+  }
+  output_filename << rapmin << "_" << rapmax ;
+  output_filename << ".dat";
   mFile.open(output_filename.str().c_str(), std::ios::out );
-  std::cout << "=======================================" << std::endl ;
-  std::cout << "calculating pt differential <pt>-v2v2pt correlation ... " << std::endl ; 
-  mFile     << "#pt      correlation      error" << std::endl ; 
+  mFile << "#pt    cov([pt],vn vn*(pt))    error    rho([pt],vn vn*(pt))    error" << std::endl ; 
   for(int ii=0; ii<ptbins; ii++){
     double ptval = rmof->get_pt_val_of_bin(ii);
-    double avg_val = sumx[ii] / rmof->get_total_music_events() ; 
-    double error = sqrt( sumx2[ii] / rmof->get_total_music_events() - pow(avg_val,2) ) ; 
-    //std::cout << ptval << "  " << avg_val << "   " << error << std::endl ; 
-    mFile << ptval << "  " << avg_val << "   " << error << std::endl ; 
+    double cov_val = sumy[ii] / rmof->get_total_music_events() ; 
+    double cov_err = sqrt( sumy2[ii] / rmof->get_total_music_events() - pow(cov_val,2) ) ; 
+    double rho_val = sumx[ii] / rmof->get_total_music_events() ; 
+    double rho_err = sqrt( sumx2[ii] / rmof->get_total_music_events() - pow(rho_val,2) ) ; 
+    mFile << ptval << "  " << cov_val << "   " << cov_err << "   " <<  rho_val << "   " <<  rho_err << std::endl ; 
   }
   mFile.close();
  
+  // calculate mean and std. dev. of ( vn vn*(pt) ) &  ( delta vn vn*(pt) )  
+  // and print
+  output_filename.str("");
+  output_filename << "results/Meanv" << n << "v" << n << "ptstar_and_Deltav" << n << "v" << n << "ptstar" ;
+  output_filename << "_pt_";
+  output_filename << ptmin << "_" << ptmax ;
+  if(yflag==1){
+   output_filename << "_y_" ;
+  }
+  else{
+   output_filename << "_eta_" ;
+  }
+  output_filename << rapmin << "_" << rapmax ;
+  output_filename << ".dat";
+  mFile.open(output_filename.str().c_str(), std::ios::out );
+  mFile << "#pt    <vn vn*(pt)>    error    <(delta(vn vn*(pt))^2>    error" << std::endl ; 
+  for(int ii=0; ii<ptbins; ii++){
+    double ptval = rmof->get_pt_val_of_bin(ii);
+    double M_val = sumA[ii] / rmof->get_total_music_events() ; 
+    double M_err = sqrt( sumA2[ii] / rmof->get_total_music_events() - pow(M_val,2) ) ; 
+    double D_val = sumB[ii] / rmof->get_total_music_events() ; 
+    double D_err = sqrt( sumB2[ii] / rmof->get_total_music_events() - pow(D_val,2) ) ; 
+    mFile << ptval << "  " << M_val << "   " << M_err << "   " <<  D_val << "   " <<  D_err << std::endl ; 
+  }
+  mFile.close();
 }
 
 
-void observables::calculate_pt_diff_meanpt_v2v2pt_correlation(std::vector<int> event_ID_ens, std::vector<double>& obs){
-
+void observables::calculate_pt_diff_meanpt_vnvnpt_correlation(int n, std::vector<int> event_ID_ens, 
+   std::vector<double>& M_vnvnptstar, std::vector<double>& M_vnvnptstar_sq, 
+   std::vector<double>& cov, std::vector<double>& obs){
   // calculate the observable for one ensemble //
   double sumpt = 0. ; 
   double sumptsq = 0. ;
   const int ptbins = rmof->get_music_pit_bins(); 
-  double sumv2v2ptstar[ptbins] ; 
-  double sumv2v2ptstarsq[ptbins] ; 
-  double sumptv2v2ptstar[ptbins] ;
+  double sumvnvnptstar[ptbins] ; 
+  double sumvnvnptstarsq[ptbins] ; 
+  double sumptvnvnptstar[ptbins] ;
   for(int ii=0; ii<ptbins; ii++){
-   sumv2v2ptstar[ii] = 0. ; 
-   sumv2v2ptstarsq[ii] = 0. ;  
-   sumptv2v2ptstar[ii] = 0. ; 
+   sumvnvnptstar[ii] = 0. ; 
+   sumvnvnptstarsq[ii] = 0. ;  
+   sumptvnvnptstar[ii] = 0. ; 
   } 
    
   for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
@@ -434,127 +331,32 @@ void observables::calculate_pt_diff_meanpt_v2v2pt_correlation(std::vector<int> e
     sumpt += pt ; 
     sumptsq += pow(pt,2);
     for(int jj=0; jj<ptbins; jj++){
-      double v2v2ptstar = ev->get_integrated_vn(2,0) * ev->get_pt_differential_vn(2,0,jj) 
-       +  ev->get_integrated_vn(2,1) * ev->get_pt_differential_vn(2,1,jj) ; 
-      sumv2v2ptstar[jj] += v2v2ptstar ; 
-      sumv2v2ptstarsq[jj] += pow(v2v2ptstar,2) ; 
-      sumptv2v2ptstar[jj] += (pt * v2v2ptstar) ; 
+      double vnvnptstar = ev->get_integrated_vn(n,0) * ev->get_pt_differential_vn(n,0,jj) 
+       +  ev->get_integrated_vn(n,1) * ev->get_pt_differential_vn(n,1,jj) ; 
+      sumvnvnptstar[jj] += vnvnptstar ; 
+      sumvnvnptstarsq[jj] += pow(vnvnptstar,2) ; 
+      sumptvnvnptstar[jj] += (pt * vnvnptstar) ; 
     }
   }
   
   sumpt /= event_ID_ens.size() ; 
   sumptsq /= event_ID_ens.size() ; 
   for(int jj=0; jj<ptbins; jj++){
-    sumv2v2ptstar[jj] /= event_ID_ens.size() ; 
-    sumv2v2ptstarsq[jj] /= event_ID_ens.size() ; 
-    sumptv2v2ptstar[jj] /= event_ID_ens.size() ; 
+    sumvnvnptstar[jj] /= event_ID_ens.size() ; 
+    sumvnvnptstarsq[jj] /= event_ID_ens.size() ; 
+    sumptvnvnptstar[jj] /= event_ID_ens.size() ; 
   }
   
   for(int ii=0; ii<ptbins; ii++){
-    double num = sumptv2v2ptstar[ii] - sumpt * sumv2v2ptstar[ii] ; 
-    double den =  sqrt( ( sumv2v2ptstarsq[ii] - sumv2v2ptstar[ii] * sumv2v2ptstar[ii] ) * ( sumptsq - sumpt * sumpt ) ) ; 
+    M_vnvnptstar[ii] = sumvnvnptstar[ii] ; 
+    M_vnvnptstar_sq[ii] = sumvnvnptstarsq[ii] ; 
+    double num = sumptvnvnptstar[ii] - sumpt * sumvnvnptstar[ii] ; 
+    cov[ii] = num ; 
+    double den =  sqrt( ( sumvnvnptstarsq[ii] - sumvnvnptstar[ii] * sumvnvnptstar[ii] ) * ( sumptsq - sumpt * sumpt ) ) ; 
     obs[ii] = num / den ; 
   }
 
 }
-
-
-
-
-void observables::output_pt_diff_meanpt_v3v3pt_correlation(){
-
- // create an ensemble
- std::vector<int> event_ID_ens;
- std::vector<double> meanpt_v3v3pt_corr_of_one_ens;
-
- const int ptbins = rmof->get_music_pit_bins(); 
- double sumx[ptbins];
- double sumx2[ptbins];
- for(int ii=0; ii<ptbins; ii++){
-   sumx[ii] = 0. ; sumx2[ii] = 0. ; 
-   meanpt_v3v3pt_corr_of_one_ens.push_back(0.);
- }
-  
- for(int ii=0; ii<rmof->get_total_music_events(); ii++){
-    event_ID_ens = get_an_event_ensemble();
-    // calculate correlation of a given ensemble
-    calculate_pt_diff_meanpt_v3v3pt_correlation(event_ID_ens,meanpt_v3v3pt_corr_of_one_ens);
-    for(int jj=0; jj<ptbins; jj++){
-      sumx[jj] += meanpt_v3v3pt_corr_of_one_ens[jj] ;
-      sumx2[jj] += pow(meanpt_v3v3pt_corr_of_one_ens[jj],2) ; 
-    }
- }
- 
- // calculate mean and std. dev. and print
-  std::ofstream mFile;
-  std::stringstream output_filename;
-  output_filename.str("");
-  output_filename << "results/mpt_v3v3pt_correlation_with_pt.dat";
-  mFile.open(output_filename.str().c_str(), std::ios::out );
-  std::cout << "=======================================" << std::endl ;
-  std::cout << "calculating pt differential <pt>-v3v3pt correlation ... " << std::endl ; 
-  mFile     << "#pt      correlation      error" << std::endl ; 
-  for(int ii=0; ii<ptbins; ii++){
-    double ptval = rmof->get_pt_val_of_bin(ii);
-    double avg_val = sumx[ii] / rmof->get_total_music_events() ; 
-    double error = sqrt( sumx2[ii] / rmof->get_total_music_events() - pow(avg_val,2) ) ; 
-    //std::cout << ptval << "  " << avg_val << "   " << error << std::endl ; 
-    mFile << ptval << "  " << avg_val << "   " << error << std::endl ; 
-  }
-  mFile.close();
-  
-}
-
-
-void observables::calculate_pt_diff_meanpt_v3v3pt_correlation(std::vector<int> event_ID_ens, std::vector<double>& obs){
-
-  // calculate the observable for one ensemble //
-  double sumpt = 0. ; 
-  double sumptsq = 0. ;
-  const int ptbins = rmof->get_music_pit_bins(); 
-  double sumv3v3ptstar[ptbins] ; 
-  double sumv3v3ptstarsq[ptbins] ; 
-  double sumptv3v3ptstar[ptbins] ;
-  for(int ii=0; ii<ptbins; ii++){
-   sumv3v3ptstar[ii] = 0. ; 
-   sumv3v3ptstarsq[ii] = 0. ;  
-   sumptv3v3ptstar[ii] = 0. ; 
-  } 
-   
-  for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
-    int eventID = event_ID_ens[ii] ; 
-    event* ev = rmof->get_event(eventID) ; 
-    double pt = ev->get_mean_pt();
-    sumpt += pt ; 
-    sumptsq += pow(pt,2);
-    for(int jj=0; jj<ptbins; jj++){
-      double v3v3ptstar = ev->get_integrated_vn(3,0) * ev->get_pt_differential_vn(3,0,jj) 
-       +  ev->get_integrated_vn(3,1) * ev->get_pt_differential_vn(3,1,jj) ; 
-      sumv3v3ptstar[jj] += v3v3ptstar ; 
-      sumv3v3ptstarsq[jj] += pow(v3v3ptstar,2) ; 
-      sumptv3v3ptstar[jj] += (pt * v3v3ptstar) ; 
-    }
-  }
-  
-  sumpt /= event_ID_ens.size() ; 
-  sumptsq /= event_ID_ens.size() ; 
-  for(int jj=0; jj<ptbins; jj++){
-    sumv3v3ptstar[jj] /= event_ID_ens.size() ; 
-    sumv3v3ptstarsq[jj] /= event_ID_ens.size() ; 
-    sumptv3v3ptstar[jj] /= event_ID_ens.size() ; 
-  }
-  
-  for(int ii=0; ii<ptbins; ii++){
-    double num = sumptv3v3ptstar[ii] - sumpt * sumv3v3ptstar[ii] ; 
-    double den =  sqrt( ( sumv3v3ptstarsq[ii] - sumv3v3ptstar[ii] * sumv3v3ptstar[ii] ) * ( sumptsq - sumpt * sumpt ) ) ; 
-    obs[ii] = num / den ; 
-  }
-
-}
-
-
-
-
 
 
 
