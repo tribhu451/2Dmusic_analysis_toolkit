@@ -22,8 +22,8 @@ class observables{
     read_music_output_files* rmof ; 
     random_gen* rand;
     std::vector<int> get_an_event_ensemble();
-    void calculate_meanpt_v2sq_correlation(std::vector<int> , double& );
-    void calculate_meanpt_v3sq_correlation(std::vector<int> , double& );
+    void calculate_meanpt_v2sq_correlation(std::vector<int> , double& , double& , double& , double& , double& , double& );
+    void calculate_meanpt_v3sq_correlation(std::vector<int> , double& , double& , double& , double& , double& , double& );
         
     void calculate_pt_diff_meanpt_v2v2pt_correlation(std::vector<int> , std::vector<double>& );
     void calculate_pt_diff_meanpt_v3v3pt_correlation(std::vector<int> , std::vector<double>& );
