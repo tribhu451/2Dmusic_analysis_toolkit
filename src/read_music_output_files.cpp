@@ -1,7 +1,8 @@
 #include "read_music_output_files.h"
 #include "event.h"
 
-read_music_output_files::read_music_output_files(std::vector<std::string>  aa_music_output_paths){
+read_music_output_files::read_music_output_files(std::vector<std::string>  aa_music_output_paths, 
+int apid, int ayflag, double arapmin, double arapmax, double aptmin, double aptmax): pid(apid), yflag(ayflag), rapmin(arapmin), rapmax(arapmax), ptmin(aptmin), ptmax(aptmax){
   music_output_paths = aa_music_output_paths ;
      
   // now set how many events do you have
@@ -14,8 +15,22 @@ read_music_output_files::read_music_output_files(std::vector<std::string>  aa_mu
       std::stringstream input_filename;
       input_filename.str(std::string());
       input_filename << music_output_paths[output_path_index].c_str() ;
-      input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX; 
-      input_filename << "/vnchpT_y_-0.5_0.5.dat";
+      input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX;
+      if(pid==0){
+        input_filename << "/vnchpT";
+      }
+      else{
+        std::cout << "the code is not yet updated to read the identified hadron's details ... " << std::endl ;
+        exit(-1); 
+      }
+      if(yflag==1){
+        input_filename << "_y_" ;
+      }
+      else{
+        input_filename << "_eta_" ;
+      }
+      input_filename << rapmin << "_" << rapmax ; 
+      input_filename << ".dat" ;
       file.open(input_filename.str().c_str(), std::ios::in);
       if(!file){
         continue ; 
@@ -59,7 +74,7 @@ read_music_output_files::read_music_output_files(std::vector<std::string>  aa_mu
 }
 
 
-void read_music_output_files::read_pt_integrated_stuff_for_hpm(int yflag, double rapmin, double rapmax, double ptmin, double ptmax){
+void read_music_output_files::read_pt_integrated_stuff(){
   std::ifstream file;
   int temp_total_music_events = 0 ;
   double Nch, v1cos, v1sin, v2cos, v2sin, v3cos, v3sin, v4cos, v4sin, dummy ; 
@@ -69,7 +84,9 @@ void read_music_output_files::read_pt_integrated_stuff_for_hpm(int yflag, double
       input_filename.str(std::string());
       input_filename << music_output_paths[output_path_index].c_str() ;
       input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX; 
-      input_filename << "/vnch_pT_";
+      if(pid==0){
+        input_filename << "/vnch_pT_";
+      }
       input_filename << ptmin << "_" << ptmax ;
       if(yflag==1){
         input_filename << "_y_" ;
@@ -119,7 +136,7 @@ void read_music_output_files::read_pt_integrated_stuff_for_hpm(int yflag, double
 
 
 
-void read_music_output_files::read_meanpt_for_hpm(int yflag, double rapmin, double rapmax, double ptmin, double ptmax){
+void read_music_output_files::read_meanpt(){
   std::ifstream file;
   int temp_total_music_events = 0 ;
   double mpt ; 
@@ -129,7 +146,9 @@ void read_music_output_files::read_meanpt_for_hpm(int yflag, double rapmin, doub
       input_filename.str(std::string());
       input_filename << music_output_paths[output_path_index].c_str() ;
       input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX; 
-      input_filename << "/mean_pt_ch_pt_";
+      if(pid==0){
+        input_filename << "/mean_pt_ch_pt_";
+      }
       input_filename << ptmin << "_" << ptmax ;
       if(yflag==1){
         input_filename << "_y_" ;
@@ -169,7 +188,7 @@ void read_music_output_files::read_meanpt_for_hpm(int yflag, double rapmin, doub
 
 
 
-void read_music_output_files::read_pt_differential_stuff_for_hpm(int yflag, double rapmin, double rapmax){
+void read_music_output_files::read_pt_differential_stuff(){
   std::ifstream file;
   int temp_total_music_events = 0 ;
   double ptv, dnptdptdy, v1cos, v1sin, v2cos, v2sin, v3cos, v3sin, v4cos, v4sin, dummy ; 
@@ -179,7 +198,9 @@ void read_music_output_files::read_pt_differential_stuff_for_hpm(int yflag, doub
       input_filename.str(std::string());
       input_filename << music_output_paths[output_path_index].c_str() ;
       input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX; 
-      input_filename << "/vnchpT";
+      if(pid==0){
+        input_filename << "/vnchpT";
+      }
       if(yflag==1){
         input_filename << "_y_" ;
       }

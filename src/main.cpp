@@ -8,6 +8,7 @@
 
 int main(int argc, char **argv){
 
+ int pid = 0 ;  // 0 for charged hadrons
  int yflag = 1 ; 
  double rapmin = -0.5 ; 
  double rapmax =  0.5 ; 
@@ -50,10 +51,10 @@ int main(int argc, char **argv){
  std::cout << std::endl ;
  
  
- read_music_output_files* rmof = new read_music_output_files(music_output_paths); 
- rmof->read_pt_differential_stuff_for_hpm(yflag, rapmin, rapmax);
- rmof->read_pt_integrated_stuff_for_hpm( yflag,  rapmin,  rapmax,  ptmin,  ptmax );
- rmof->read_meanpt_for_hpm( yflag,  rapmin,  rapmax,  ptmin,  ptmax );
+ read_music_output_files* rmof = new read_music_output_files(music_output_paths, pid, yflag,  rapmin,  rapmax,  ptmin,  ptmax); 
+ rmof->read_pt_differential_stuff();
+ rmof->read_pt_integrated_stuff();
+ rmof->read_meanpt();
  
  observables* obj = new observables(rmof);
  obj->output_meanpt_v2sq_correlation();
