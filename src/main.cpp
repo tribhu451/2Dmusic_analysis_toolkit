@@ -9,6 +9,7 @@
 int main(int argc, char **argv){
 
  int pid = 0 ;  // 0 for charged hadrons
+ // kinematics cut below
  int yflag = 1 ; 
  double rapmin = -0.5 ; 
  double rapmax =  0.5 ; 
@@ -56,7 +57,7 @@ int main(int argc, char **argv){
  rmof->read_pt_integrated_stuff();
  rmof->read_meanpt();
  
- observables* obj = new observables(rmof);
+ observables* obj = new observables(rmof, pid, yflag,  rapmin,  rapmax,  ptmin,  ptmax);
  obj->output_meanpt_v2sq_correlation();
  obj->output_meanpt_v3sq_correlation();
  obj->output_pt_diff_meanpt_v2v2pt_correlation();

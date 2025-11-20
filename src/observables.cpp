@@ -1,10 +1,11 @@
 #include "observables.h"
 #include <cmath>
 
-observables::observables(read_music_output_files* armof) : rmof(armof){
+observables::observables(read_music_output_files* armof, int apid, int ayflag, double arapmin, 
+   double arapmax, double aptmin, double aptmax) : rmof(armof), pid(apid), yflag(ayflag), 
+     rapmin(arapmin), rapmax(arapmax), ptmin(aptmin), ptmax(aptmax){
   event_arena = rmof->get_event_arena();
   rand = new random_gen();
-  
   // print to check whether reading is perfect or not ???
   /*
   for(int ii=0; ii<rmof->get_music_pit_bins(); ii++){
