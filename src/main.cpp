@@ -62,7 +62,9 @@ int main(int argc, char **argv){
  obj->output_meanpt_vnsq_correlation(3);
  obj->output_pt_diff_meanpt_vnvnpt_correlation(2);
  obj->output_pt_diff_meanpt_vnvnpt_correlation(3);
- 
+ obj->output_pt_diff_meanpt_vnptvnpt_correlation(2);
+ obj->output_pt_diff_meanpt_vnptvnpt_correlation(3);
+
  return 0 ;  
 }
 

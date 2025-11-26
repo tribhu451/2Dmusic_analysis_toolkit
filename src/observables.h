@@ -14,6 +14,7 @@ class observables{
     observables(read_music_output_files* , int pid, int yflag, double rapmin, double rapmax, double ptmin, double ptmax);
     void output_meanpt_vnsq_correlation(int n);
     void output_pt_diff_meanpt_vnvnpt_correlation(int n);
+    void output_pt_diff_meanpt_vnptvnpt_correlation(int n);
 
   private :
     std::vector<event*> event_arena;
@@ -26,7 +27,10 @@ class observables{
     void calculate_pt_diff_meanpt_vnvnpt_correlation(int n, std::vector<int> event_ID_ens, 
       std::vector<double>& M_vnvnptstar, std::vector<double>& M_vnvnptstar_sq, 
       std::vector<double>& cov, std::vector<double>& obs);
-      
+    void calculate_pt_diff_meanpt_vnptvnpt_correlation(int n, std::vector<int> event_ID_ens, 
+      std::vector<double>& M_vnptvnptstar, std::vector<double>& M_vnptvnptstar_sq, 
+      std::vector<double>& cov, std::vector<double>& obs);
+
     // kinematics cut     
     int pid ; int yflag ; double rapmin ; 
     double rapmax ; double ptmin ; double ptmax ; 
