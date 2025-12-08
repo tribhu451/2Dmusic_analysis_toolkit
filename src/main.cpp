@@ -26,7 +26,7 @@ int main(int argc, char **argv){
     exit(-1); 
   }
 
- if(argc > 6){
+ if(argc > 16){
     std::cout << "too many paths provided (5 allowed) ..." << std::endl ;
     exit(-1); 
   }
@@ -34,7 +34,7 @@ int main(int argc, char **argv){
 
  std::vector<std::string> music_output_paths ; 
  
- for(int ii=2; ii<7; ii++){
+ for(int ii=2; ii<17; ii++){
    if(ii==argc){
      std::cout <<  (ii-1) << " paths provided" << std::endl ; 
      for(int jj=1; jj<argc; jj++){
@@ -64,6 +64,8 @@ int main(int argc, char **argv){
  obj->output_pt_diff_meanpt_vnvnpt_correlation(3);
  obj->output_pt_diff_meanpt_vnptvnpt_correlation(2);
  obj->output_pt_diff_meanpt_vnptvnpt_correlation(3);
+ obj-> output_pt_diff_multiparticle_vn(2);
+ obj-> output_pt_diff_multiparticle_vn(3);
 
  return 0 ;  
 }

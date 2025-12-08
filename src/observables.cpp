@@ -6,15 +6,6 @@ observables::observables(read_music_output_files* armof, int apid, int ayflag, d
      rapmin(arapmin), rapmax(arapmax), ptmin(aptmin), ptmax(aptmax){
   event_arena = rmof->get_event_arena();
   rand = new random_gen();
-  // print to check whether reading is perfect or not ???
-  /*
-  for(int ii=0; ii<rmof->get_music_pit_bins(); ii++){
-    double pt = rmof->get_pt_val_of_bin(ii) ; 
-    double v4cos = rmof->get_event(1)->get_pt_differential_vn(4, 0, ii);
-    double v4sin = rmof->get_event(1)->get_pt_differential_vn(4, 1, ii);
-    std::cout << ii << "  " << pt << "  " << v4cos << "  " << v4sin << std::endl ; 
-  }
-  */
 }
 
 std::vector<int> observables::get_an_event_ensemble(){
@@ -518,6 +509,159 @@ void observables::calculate_pt_diff_meanpt_vnptvnpt_correlation(int n, std::vect
     cov[ii] = num ; 
     double den =  sqrt( ( sumvnptvnptstarsq[ii] - sumvnptvnptstar[ii] * sumvnptvnptstar[ii] ) * ( sumptsq - sumpt * sumpt ) ) ; 
     obs[ii] = num / den ; 
+  }
+
+}
+
+
+
+void observables::output_pt_diff_multiparticle_vn(int n){
+ // create an ensemble
+ std::vector<int> event_ID_ens;
+ std::vector<double> vn_2_pt;
+ std::vector<double> vn_4_pt;
+ 
+ double vn_2part_sq;
+ double vn_4part_fr;
+
+ const int ptbins = rmof->get_music_pit_bins(); 
+ double sumx[ptbins];
+ double sumx2[ptbins];
+ double sumy[ptbins];
+ double sumy2[ptbins];
+
+ double sumw1 = 0 ; 
+ double sumw1_sq = 0 ; 
+ double sumw2 = 0 ; 
+ double sumw2_sq = 0 ; 
+ 
+ for(int ii=0; ii<ptbins; ii++){
+   sumx[ii] = 0. ; 
+   sumx2[ii] = 0. ; 
+   sumy[ii] = 0. ; 
+   sumy2[ii] = 0. ; 
+   vn_2_pt.push_back(0.);
+   vn_4_pt.push_back(0.);
+ }
+  
+   //for(int ii=0; ii<rmof->get_total_music_events(); ii++){
+   int iEns = 0 ;
+   int itry = 0 ;
+   do{
+     event_ID_ens = get_an_event_ensemble();
+     itry++ ; 
+     // calculate correlation of a given ensemble
+     calculate_pt_diff_multiparticle_vn(n, event_ID_ens, vn_2part_sq, vn_4part_fr,  vn_2_pt, vn_4_pt );
+     if(vn_2part_sq < 0 || vn_4part_fr < 0 ){
+       continue ; 
+     }else{
+       iEns++ ; 
+       sumw1 += sqrt(vn_2part_sq) ;  //  vn{2}
+       sumw1_sq += vn_2part_sq  ; 
+       sumw2 += pow(vn_4part_fr,0.25) ;  // vn{4}
+       sumw2_sq += pow(vn_4part_fr,0.5) ; 
+       for(int jj=0; jj<ptbins; jj++){
+        sumx[jj]  += vn_2_pt[jj] ;
+        sumx2[jj] += pow(vn_2_pt[jj],2) ; 
+        sumy[jj]  += vn_4_pt[jj] ;
+        sumy2[jj] += pow(vn_4_pt[jj],2) ; 
+       }
+     }
+   }
+   while(iEns<rmof->get_total_music_events());
+   std::cout << "Number of ensemble tries to calculate v"<<n<<"{2} and {4} = " << itry << std::endl;
+ 
+  std::ofstream mFile;
+  std::stringstream output_filename;
+
+  // calculate mean and std. dev. 
+  // and print
+  output_filename.str("");
+  output_filename << "results/Multiparticle_v" << n ;
+  output_filename << "_pt_";
+  output_filename << ptmin << "_" << ptmax ;
+  if(yflag==1){
+   output_filename << "_y_" ;
+  }
+  else{
+   output_filename << "_eta_" ;
+  }
+  output_filename << rapmin << "_" << rapmax ;
+  output_filename << ".dat";
+  mFile.open(output_filename.str().c_str(), std::ios::out );
+  mFile << "#pt  int-v" << n <<"{2}   error   int-v" << n << "{4}    error" << "  v" << n<<"{2}(pt)    error    v_"<<n<<"{4}(pt)    error" << std::endl ; 
+  for(int ii=0; ii<ptbins; ii++){
+    double ptval = rmof->get_pt_val_of_bin(ii);
+    double int_v2_2 = sumw1 / rmof->get_total_music_events() ; 
+    double int_v2_2_err = sqrt( sumw1_sq / rmof->get_total_music_events() - pow(int_v2_2,2) ) ;    
+    double int_v2_4 = sumw2 / rmof->get_total_music_events() ; 
+    double int_v2_4_err = sqrt( sumw2_sq / rmof->get_total_music_events() - pow(int_v2_4,2) ) ;    
+    double vn_2_val = sumx[ii] / rmof->get_total_music_events() ; 
+    double vn_2_err = sqrt( sumx2[ii] / rmof->get_total_music_events() - pow(vn_2_val,2) ) ; 
+    double vn_4_val = sumy[ii] / rmof->get_total_music_events() ; 
+    double vn_4_err = sqrt( sumy2[ii] / rmof->get_total_music_events() - pow(vn_4_val,2) ) ; 
+    mFile << ptval << "  " << int_v2_2 << "  " << int_v2_2_err << "  " << int_v2_4 << "  " <<  int_v2_4_err 
+    << "  " << vn_2_val << "   " << vn_2_err << "   " <<  vn_4_val << "   " <<  vn_4_err << std::endl ; 
+  }
+  mFile.close();
+
+}
+
+
+
+// calculates v_n{2}(pT) and v_n{4}(pT)
+void observables::calculate_pt_diff_multiparticle_vn(int n, std::vector<int> event_ID_ens, 
+   double& vn_sq, double& vn_fr, std::vector<double>& vn_2, std::vector<double>& vn_4){
+  // calculate the observable for one ensemble //
+  const int ptbins = rmof->get_music_pit_bins(); 
+  double sum1[ptbins] ; 
+  double sum2 = 0. ; 
+  double sum3[ptbins] ;
+  double sum4 = 0. ;
+  for(int ii=0; ii<ptbins; ii++){
+   sum1[ii] = 0. ; 
+   sum3[ii] = 0. ; 
+  } 
+  double Cn, Sn, Cn_pt, Sn_pt, Cn_sq, Sn_sq ; 
+  for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
+    int eventID = event_ID_ens[ii] ; 
+    event* ev = rmof->get_event(eventID) ; 
+    Cn    = ev->get_integrated_vn(n,0) ; 
+    Sn    = ev->get_integrated_vn(n,1) ;
+    Cn_sq = Cn * Cn ; 
+    Sn_sq = Sn * Sn ; 
+    sum2 += ( Cn_sq + Sn_sq ) ; // < v2 v2*>
+    sum4 += ( ( Cn_sq + Sn_sq ) * ( Cn_sq + Sn_sq ) ) ; // < v2 v2* v2 v2* >
+    for(int jj=0; jj<ptbins; jj++){
+      Cn_pt = ev->get_pt_differential_vn(n,0,jj) ;
+      Sn_pt = ev->get_pt_differential_vn(n,1,jj) ;
+      sum1[jj] += ( Cn_sq + Sn_sq ) * ( Cn * Cn_pt + Sn * Sn_pt ) ; // < v2 v2* v2 v2*(pt) >
+      sum3[jj] += ( Cn * Cn_pt + Sn * Sn_pt ) ; // < v2 v2*(pt) >
+    }
+  }
+  
+  sum2 /= event_ID_ens.size() ; 
+  sum4 /= event_ID_ens.size() ; 
+
+  for(int jj=0; jj<ptbins; jj++){
+    sum1[jj] /= event_ID_ens.size() ; 
+    sum3[jj] /= event_ID_ens.size() ; 
+  }
+  
+  double den = 2. * sum2 * sum2 - sum4   ;
+
+  vn_sq = sum2 ; // < v2 v2*>
+  vn_fr = den ;  // 2 < v2 v2*> < v2 v2*> - < v2 v2* v2 v2* > 
+    
+  for(int ii=0; ii<ptbins; ii++){
+    if(vn_sq < 0 || vn_fr < 0 ){
+     vn_2[ii]=0.;
+     vn_4[ii]=0.;
+    }
+    else{
+      vn_2[ii] = sum3[ii] / sqrt(sum2) ;
+      vn_4[ii] = ( 2 * sum2 * sum3[ii] - sum1[ii]) / pow(den,3./4.) ; 
+    }
   }
 
 }
