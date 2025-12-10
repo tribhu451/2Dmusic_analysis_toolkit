@@ -16,6 +16,7 @@ class observables{
     void output_pt_diff_meanpt_vnvnpt_correlation(int n);
     void output_pt_diff_meanpt_vnptvnpt_correlation(int n);
     void output_pt_diff_multiparticle_vn(int n);
+    void output_pt_diff_multiparticle_vn_method2(int n);
 
   private :
     std::vector<event*> event_arena;
@@ -33,7 +34,9 @@ class observables{
       std::vector<double>& cov, std::vector<double>& obs);
     void calculate_pt_diff_multiparticle_vn(int n, std::vector<int> event_ID_ens, double&, double&, 
       std::vector<double>& vn_2, std::vector<double>& vn_4);
-
+    void calculate_pt_diff_multiparticle_vn_method2(int n, std::vector<int> event_ID_ens, 
+      double& vn_sq, double& vn_fr, std::vector<double>& vn_2_num, std::vector<double>& vn_4_num );
+   
     // kinematics cut     
     int pid ; int yflag ; double rapmin ; 
     double rapmax ; double ptmin ; double ptmax ; 

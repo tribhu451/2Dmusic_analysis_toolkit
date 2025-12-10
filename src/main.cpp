@@ -66,6 +66,8 @@ int main(int argc, char **argv){
  obj->output_pt_diff_meanpt_vnptvnpt_correlation(3);
  obj-> output_pt_diff_multiparticle_vn(2);
  obj-> output_pt_diff_multiparticle_vn(3);
+ obj-> output_pt_diff_multiparticle_vn_method2(2);
+ obj-> output_pt_diff_multiparticle_vn_method2(3);
 
  return 0 ;  
 }

@@ -669,3 +669,186 @@ void observables::calculate_pt_diff_multiparticle_vn(int n, std::vector<int> eve
 
 
 
+void observables::output_pt_diff_multiparticle_vn_method2(int n){
+ // create an ensemble
+ std::vector<int> event_ID_ens;
+ std::vector<double> vn_2_num_pt;
+ std::vector<double> vn_4_num_pt;
+ 
+ double vn_2part_sq;
+ double vn_4part_fr;
+
+ const int ptbins = rmof->get_music_pit_bins(); 
+ double sumx[ptbins];
+ double sumx2[ptbins];
+ double sumy[ptbins];
+ double sumy2[ptbins];
+
+ double sumw1 = 0 ; 
+ double sumw1_sq = 0 ; 
+ double sumw2 = 0 ; 
+ double sumw2_sq = 0 ; 
+ 
+ for(int ii=0; ii<ptbins; ii++){
+   sumx[ii] = 0. ; 
+   sumx2[ii] = 0. ; 
+   sumy[ii] = 0. ; 
+   sumy2[ii] = 0. ; 
+   vn_2_num_pt.push_back(0.);
+   vn_4_num_pt.push_back(0.);
+ }
+  
+   //for(int ii=0; ii<rmof->get_total_music_events(); ii++){
+   int iEns = 0 ;
+   do{
+     event_ID_ens = get_an_event_ensemble();
+     // calculate vn of a given ensemble
+     calculate_pt_diff_multiparticle_vn_method2(n, event_ID_ens, vn_2part_sq, vn_4part_fr, vn_2_num_pt, vn_4_num_pt );
+     iEns++ ; 
+     sumw1 += vn_2part_sq ;  // < v2 v2*>
+     sumw1_sq += vn_2part_sq * vn_2part_sq  ; 
+     sumw2 += vn_4part_fr ;  // 2 < v2 v2*> < v2 v2*> - < v2 v2* v2 v2* > 
+     sumw2_sq += vn_4part_fr * vn_4part_fr ; 
+     for(int jj=0; jj<ptbins; jj++){
+      sumx[jj]  += vn_2_num_pt[jj] ;
+      sumx2[jj] += pow(vn_2_num_pt[jj],2) ; 
+      sumy[jj]  += vn_4_num_pt[jj] ;
+      sumy2[jj] += pow(vn_4_num_pt[jj],2) ;    
+     }
+   }
+   while(iEns<rmof->get_total_music_events());
+   
+   sumw1 /=  rmof->get_total_music_events() ; 
+   sumw2 /=  rmof->get_total_music_events() ; 
+   sumw1_sq /=  rmof->get_total_music_events() ; 
+   sumw2_sq /=  rmof->get_total_music_events() ; 
+   if(sumw1<0){
+     std::cout << "error in method2 calculation of vn{2}, vn{4} ..." << std::endl ; 
+     std::cout << "<v2 v2*> negative ..." << std::endl ; 
+     exit(-1);
+   }
+   if(sumw2<0){
+     std::cout << "error in method2 calculation of vn{2}, vn{4} ..." << std::endl ; 
+     std::cout << "( 2 < v2 v2*> < v2 v2*> - < v2 v2* v2 v2* > )  negative ..." << std::endl ; 
+     exit(-1);
+   }
+   
+   // now calculate the integrated vn{2},vn{4} and it's error.
+   double temp1, temp2;
+   double inti_vn_2, inti_vn_2_err, inti_vn_4, inti_vn_4_err;
+   //vn{2}
+   inti_vn_2 = sqrt(sumw1);
+   temp1 = sqrt(sumw1_sq - sumw1 * sumw1) ;
+   inti_vn_2_err = temp1 * 0.50 * 1. / sqrt(sumw1);
+   // vn{4}
+   inti_vn_4 = pow(sumw2,0.25);
+   temp1 = sqrt(sumw2_sq - sumw2 * sumw2) ;
+   inti_vn_4_err = temp1 * 0.25 * pow(sumw2,-0.75);
+   
+   for(int ii=0; ii<ptbins; ii++){
+     sumx[ii] /= rmof->get_total_music_events() ; 
+     sumx2[ii] /= rmof->get_total_music_events() ; 
+     sumy[ii] /= rmof->get_total_music_events() ; 
+     sumy2[ii] /= rmof->get_total_music_events() ; 
+   }   
+
+   // now calculate the pt-differential vn{2},vn{4} and it's error.
+   double vn_2[ptbins];
+   double vn_4[ptbins];
+   double vn_2_err[ptbins];
+   double vn_4_err[ptbins];
+   for(int ii=0; ii<ptbins; ii++){ 
+     vn_2[ii] = sumx[ii] / inti_vn_2 ;
+     temp1 = sqrt(sumx2[ii] - sumx[ii] * sumx[ii]);
+     vn_2_err[ii] = sqrt( pow(sumx[ii],2)/pow(inti_vn_2,4) * pow(inti_vn_2_err,2) + 1. / pow(inti_vn_2,2) * pow(temp1,2) ) ;
+     
+     vn_4[ii] = sumy[ii] / pow(sumw2,0.75); ; // y = sumy[ii], Dy = temp1,  x = sumw2, Dx = temp2 
+     temp1 = sqrt(sumy2[ii] - sumy[ii] * sumy[ii]);
+     temp2 =  sqrt(sumw2_sq - sumw2 * sumw2) ;
+     vn_4_err[ii] = sqrt( 9./16. * pow(sumy[ii],2) * pow(sumw2,-7./2.) * pow(temp2,2) + pow(sumw2,-3./2.)*pow(temp1,2) ) ;
+   }
+
+
+  std::ofstream mFile;
+  std::stringstream output_filename;
+  output_filename.str("");
+  output_filename << "results/Multiparticle_v" << n << "_method2";
+  output_filename << "_pt_";
+  output_filename << ptmin << "_" << ptmax ;
+  if(yflag==1){
+   output_filename << "_y_" ;
+  }
+  else{
+   output_filename << "_eta_" ;
+  }
+  output_filename << rapmin << "_" << rapmax ;
+  output_filename << ".dat";
+  mFile.open(output_filename.str().c_str(), std::ios::out );
+  mFile << "#pt  int-v" << n <<"{2}   error   int-v" << n << "{4}    error" << "  v" << n<<"{2}(pt)    error    v_"<<n<<"{4}(pt)    error" << std::endl ; 
+  for(int ii=0; ii<ptbins; ii++){
+    double ptval = rmof->get_pt_val_of_bin(ii);  
+    mFile << ptval << "  " << inti_vn_2 << "  " << inti_vn_2_err << "  " << inti_vn_4 << "  " <<  inti_vn_4_err <<
+    "  " << vn_2[ii] << "  " << vn_2_err[ii] << "  " << vn_4[ii] << "  " << vn_4_err[ii] << std::endl ; 
+  }
+  mFile.close();
+
+}
+
+
+
+// calculates v_n{2}(pT) and v_n{4}(pT)
+void observables::calculate_pt_diff_multiparticle_vn_method2(int n, std::vector<int> event_ID_ens, 
+   double& vn_sq, double& vn_fr, std::vector<double>& vn_2_num, std::vector<double>& vn_4_num ){
+  // calculate the observable for one ensemble //
+  const int ptbins = rmof->get_music_pit_bins(); 
+  double sum1[ptbins] ; 
+  double sum2 = 0. ; 
+  double sum3[ptbins] ;
+  double sum4 = 0. ;
+  for(int ii=0; ii<ptbins; ii++){
+   sum1[ii] = 0. ; 
+   sum3[ii] = 0. ; 
+  } 
+  double Cn, Sn, Cn_pt, Sn_pt, Cn_sq, Sn_sq ; 
+  for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
+    int eventID = event_ID_ens[ii] ; 
+    event* ev = rmof->get_event(eventID) ; 
+    Cn    = ev->get_integrated_vn(n,0) ; 
+    Sn    = ev->get_integrated_vn(n,1) ;
+    Cn_sq = Cn * Cn ; 
+    Sn_sq = Sn * Sn ; 
+    sum2 += ( Cn_sq + Sn_sq ) ; // < v2 v2*>
+    sum4 += ( ( Cn_sq + Sn_sq ) * ( Cn_sq + Sn_sq ) ) ; // < v2 v2* v2 v2* >
+    for(int jj=0; jj<ptbins; jj++){
+      Cn_pt = ev->get_pt_differential_vn(n,0,jj) ;
+      Sn_pt = ev->get_pt_differential_vn(n,1,jj) ;
+      sum1[jj] += ( Cn_sq + Sn_sq ) * ( Cn * Cn_pt + Sn * Sn_pt ) ; // < v2 v2* v2 v2*(pt) >
+      sum3[jj] += ( Cn * Cn_pt + Sn * Sn_pt ) ; // < v2 v2*(pt) >
+    }
+  }
+  
+  sum2 /= event_ID_ens.size() ; 
+  sum4 /= event_ID_ens.size() ; 
+
+  for(int jj=0; jj<ptbins; jj++){
+    sum1[jj] /= event_ID_ens.size() ; 
+    sum3[jj] /= event_ID_ens.size() ; 
+  }
+  
+  double den = 2. * sum2 * sum2 - sum4   ;
+  vn_sq = sum2 ; // < v2 v2*>
+  vn_fr = den ;  // 2 < v2 v2*> < v2 v2*> - < v2 v2* v2 v2* > 
+    
+  for(int ii=0; ii<ptbins; ii++){
+   vn_2_num[ii] = sum3[ii] ;
+   vn_4_num[ii] = ( 2. * sum2 * sum3[ii] - sum1[ii] ) ; 
+  }
+
+}
+
+
+
+
+
+
+
