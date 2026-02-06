@@ -936,43 +936,43 @@ void observables::output_meanpt_vnsq_higher_moments(int n){
 
   val = sumA / rmof->get_total_music_events() ; 
   err = sqrt( sumAsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err ; 
+  mFile << val << "  " << err << "  "; 
   
   val = sumB / rmof->get_total_music_events() ; 
   err = sqrt( sumBsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err ; 
+  mFile << val << "  " << err << "  " ; 
 
   val = sumC / rmof->get_total_music_events() ; 
   err = sqrt( sumCsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err ; 
+  mFile << val << "  " << err << "  " ; 
 
   val = sumD / rmof->get_total_music_events() ; 
   err = sqrt( sumDsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err ; 
+  mFile << val << "  " << err << "  " ; 
 
   val = sumE / rmof->get_total_music_events() ; 
   err = sqrt( sumEsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err ; 
+  mFile << val << "  " << err << "  " ; 
  
   val = sumU / rmof->get_total_music_events() ; 
   err = sqrt( sumUsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err ; 
+  mFile << val << "  " << err << "  " ; 
   
   val = sumV / rmof->get_total_music_events() ; 
   err = sqrt( sumVsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err ; 
+  mFile << val << "  " << err << "  " ; 
 
   val = sumW / rmof->get_total_music_events() ; 
   err = sqrt( sumWsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err ; 
+  mFile << val << "  " << err << "  " ; 
 
   val = sumX / rmof->get_total_music_events() ; 
   err = sqrt( sumXsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err ; 
+  mFile << val << "  " << err << "  " ; 
 
   val = sumY / rmof->get_total_music_events() ; 
   err = sqrt( sumYsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err ; 
+  mFile << val << "  " << err << "  " ; 
    
   mFile << std::endl ; 
   mFile.close();
