@@ -17,6 +17,40 @@ std::vector<int> observables::get_an_event_ensemble(){
   return event_ID_ens;
 }
 
+
+void observables::output_average_multiplicity(){
+
+  double net_mult = 0 ;
+  for(int ii=0; ii<rmof->get_total_music_events(); ii++){
+    int eventID = ii ; 
+    event* ev = rmof->get_event(eventID) ; 
+    double mult = ev->get_integrated_vn(0,0);
+    net_mult += mult ; 
+  }
+  net_mult /= rmof->get_total_music_events();
+
+  std::ofstream mFile;
+  std::stringstream output_filename;
+  output_filename.str("");
+  output_filename << "results/Net_multiplicty";
+  output_filename << "_pt_";
+  output_filename << ptmin << "_" << ptmax ;
+  if(yflag==1){
+   output_filename << "_y_" ;
+  }
+  else{
+   output_filename << "_eta_" ;
+  }
+  output_filename << rapmin << "_" << rapmax ;
+  output_filename << ".dat";
+  mFile.open(output_filename.str().c_str(), std::ios::out );
+  mFile << "#Net-Multiplicity" << std::endl ;
+  mFile <<  net_mult << std::endl ; 
+  mFile.close();
+
+
+}
+
 void observables::output_meanpt_vnsq_correlation(int n){
 
  // create an ensemble

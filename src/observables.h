@@ -17,6 +17,7 @@ class observables{
     void output_pt_diff_meanpt_vnptvnpt_correlation(int n);
     void output_pt_diff_multiparticle_vn(int n);
     void output_pt_diff_multiparticle_vn_method2(int n);
+    void output_average_multiplicity();
 
   private :
     std::vector<event*> event_arena;

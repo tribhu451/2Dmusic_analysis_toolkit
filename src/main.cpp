@@ -58,6 +58,7 @@ int main(int argc, char **argv){
  rmof->read_meanpt();
  
  observables* obj = new observables(rmof, pid, yflag,  rapmin,  rapmax,  ptmin,  ptmax);
+ obj->output_average_multiplicity();
  obj->output_meanpt_vnsq_correlation(2);
  obj->output_meanpt_vnsq_correlation(3);
  obj->output_pt_diff_meanpt_vnvnpt_correlation(2);
