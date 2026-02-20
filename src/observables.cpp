@@ -1079,6 +1079,282 @@ void observables::calculate_meanpt_vnsq_higher_moments(int n, std::vector<int> e
 
 
 
+void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n){
+
+ // create an ensemble
+ std::vector<int> event_ID_ens;
+ 
+ double sumA = 0 ; 
+ double sumAsq = 0 ; 
+ double sumB = 0 ; 
+ double sumBsq = 0 ; 
+ double sumC = 0 ; 
+ double sumCsq = 0 ; 
+ double sumD = 0 ; 
+ double sumDsq = 0 ; 
+ double sumE = 0 ; 
+ double sumEsq = 0 ; 
+
+ double sumU = 0 ; 
+ double sumUsq = 0 ; 
+ double sumV = 0 ; 
+ double sumVsq = 0 ; 
+ double sumW = 0 ; 
+ double sumWsq = 0 ; 
+ double sumX = 0 ; 
+ double sumXsq = 0 ; 
+ double sumY = 0 ; 
+ double sumYsq = 0 ; 
+
+ double c11, c21, c31, c41, c122;
+ double r11, r21, r31, r41, r122;
+ 
+ for(int ii=0; ii<rmof->get_total_music_events(); ii++){
+    event_ID_ens = get_an_event_ensemble();
+    // calculate correlation of a given ensemble
+    calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(n,event_ID_ens, c11, r11, c21, r21, c31, r31, c41, r41, c122, r122);
+    sumA  += c11 ; 
+    sumAsq += pow(c11,2); 
+    sumB  += c21 ; 
+    sumBsq += pow(c21,2); 
+    sumC  += c31 ; 
+    sumCsq += pow(c31,2); 
+    sumD  += c41 ; 
+    sumDsq += pow(c41,2); 
+    sumE  += c122 ; 
+    sumEsq += pow(c122,2); 
+    
+    sumU  += r11 ; 
+    sumUsq += pow(r11,2); 
+    sumV  += r21 ; 
+    sumVsq += pow(r21,2); 
+    sumW  += r31 ; 
+    sumWsq += pow(r31,2); 
+    sumX  += r41 ; 
+    sumXsq += pow(r41,2); 
+    sumY  += r122 ; 
+    sumYsq += pow(r122,2); 
+ }
+ 
+  
+  std::ofstream mFile;
+  std::stringstream output_filename;
+
+  double val;
+  double err;
+
+  // write to file
+  output_filename.str("");
+  output_filename << "results/Meanpt_v" << n << "sq_higher_moments_mult_fluc_corrected";
+  output_filename << "_pt_";
+  output_filename << ptmin << "_" << ptmax ;
+  if(yflag==1){
+   output_filename << "_y_" ;
+  }
+  else{
+   output_filename << "_eta_" ;
+  }
+  output_filename << rapmin << "_" << rapmax ;
+  output_filename << ".dat";
+  mFile.open(output_filename.str().c_str(), std::ios::out );
+  mFile << "#Cov(1,1)   error   Cov(2,1)   error   Cov(3,1)   error    Cov(4,1)   error  Cov(1,2,2)   error " 
+  << "  rho(1,1)    error    rho(2,1)    error   rho(3,1)    error  rho(4,1)  error   rho(1,2,2)   error  " 
+  << std::endl ;
+
+  val = sumA / rmof->get_total_music_events() ; 
+  err = sqrt( sumAsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  "; 
+  
+  val = sumB / rmof->get_total_music_events() ; 
+  err = sqrt( sumBsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ; 
+
+  val = sumC / rmof->get_total_music_events() ; 
+  err = sqrt( sumCsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ; 
+
+  val = sumD / rmof->get_total_music_events() ; 
+  err = sqrt( sumDsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ; 
+
+  val = sumE / rmof->get_total_music_events() ; 
+  err = sqrt( sumEsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ; 
+ 
+  val = sumU / rmof->get_total_music_events() ; 
+  err = sqrt( sumUsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ; 
+  
+  val = sumV / rmof->get_total_music_events() ; 
+  err = sqrt( sumVsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ; 
+
+  val = sumW / rmof->get_total_music_events() ; 
+  err = sqrt( sumWsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ; 
+
+  val = sumX / rmof->get_total_music_events() ; 
+  err = sqrt( sumXsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ; 
+
+  val = sumY / rmof->get_total_music_events() ; 
+  err = sqrt( sumYsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ; 
+   
+  mFile << std::endl ; 
+  mFile.close();
+  
+}
+
+
+void observables::calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n, std::vector<int> event_ID_ens, 
+    double& Cov11, double& rho11, double& Cov21, double& rho21, 
+    double& Cov31, double& rho31, double& Cov41, double& rho41, 
+    double& Cov122, double& rho122 ){
+
+   // frequently used variables, globally declare karagala.
+   // allocation inside loop takes time.
+   double nch;
+   double spt;
+   double vnvnstar;
+   double deltapt;
+   double deltavnsq;
+
+
+  // first : Var(Nch), average <pt> and average <vn^2> //
+  double sumpt = 0. ; 
+  double sumnch = 0. ; 
+  double sumnchsq = 0. ; 
+  double sumvnvnstar = 0. ; 
+
+  for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
+    int eventID = event_ID_ens[ii] ; 
+    event* ev = rmof->get_event(eventID) ; 
+    nch = ev->get_integrated_vn(0,0);
+    spt = ev->get_mean_pt();
+    vnvnstar = pow(ev->get_integrated_vn(n,0),2) + pow(ev->get_integrated_vn(n,1),2) ;  
+    sumpt += spt ; 
+    sumvnvnstar += vnvnstar ;  
+    sumnch += nch ; 
+    sumnchsq += pow(nch,2);
+  }
+  
+  sumpt /= event_ID_ens.size() ; 
+  sumvnvnstar /= event_ID_ens.size() ; 
+  sumnch /= event_ID_ens.size() ; 
+  sumnchsq /= event_ID_ens.size() ; 
+  double avg_nch = sumnch ;                                      // <Nch>
+  double variance_nch =  ( sumnchsq - sumnch * sumnch )  ;       // Var(Nch)
+  double avg_mpt = sumpt ;                                       // <pt>
+  double avg_vnsq = sumvnvnstar ;                                // <vn^2>
+
+
+  // second : cov(delta pt, Nch) and cov(delta vn^2, Nch) //
+  double sum_deltapt_nch = 0 ; 
+  double sum_deltavnsq_nch = 0 ; 
+  double sum_deltapt = 0 ; 
+  double sum_deltavnsq = 0 ;
+  double sum_nch = 0 ;  
+  for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
+    int eventID = event_ID_ens[ii] ; 
+    event* ev = rmof->get_event(eventID) ; 
+    nch = ev->get_integrated_vn(0,0);
+    spt = ev->get_mean_pt();
+    vnvnstar = pow(ev->get_integrated_vn(n,0),2) + pow(ev->get_integrated_vn(n,1),2) ; 
+    // deltapt 
+    deltapt = (spt - avg_mpt) ;
+    // delta vn^2  
+    deltavnsq = (vnvnstar - avg_vnsq) ;  
+    
+    sum_deltapt_nch   += (deltapt*nch);
+    sum_deltavnsq_nch += (deltavnsq*nch);
+    sum_deltapt       += (deltapt);
+    sum_deltavnsq     += (deltavnsq);
+    sum_nch           += (nch);
+  }
+  
+  sum_deltapt_nch   /= event_ID_ens.size() ; 
+  sum_deltavnsq_nch /= event_ID_ens.size() ; 
+  sum_deltapt       /= event_ID_ens.size() ; 
+  sum_deltavnsq     /= event_ID_ens.size() ; 
+  sum_nch           /= event_ID_ens.size() ; 
+
+  double cov_deltapt_nch = sum_deltapt_nch - sum_deltapt * sum_nch ;        // Cov(delta pt, Nch)
+  double cov_deltavnsq_nch = sum_deltavnsq_nch - sum_deltavnsq * sum_nch ;  // Cov(delta vn^2, Nch)
+
+
+  // multiplicity fluctuation corrected calculation //
+  double sum_dptsq=0.; 
+  double sum_dvn2sq=0.; 
+  double sum_dptcu=0.; 
+  double sum_dpt_dvnsq=0.; 
+  double sum_dptsq_dvnsq=0.; 
+  double sum_dptcu_dvnsq=0.; 
+  double sum_dpt4_dvnsq=0.; 
+  double sum_dpt_dvnsq_dvnsq=0.;
+   
+  double deltapt_tilde, delta_vnsq_tilde;
+  for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
+    int eventID = event_ID_ens[ii] ; 
+    event* ev = rmof->get_event(eventID) ; 
+    spt = ev->get_mean_pt();
+    nch = ev->get_integrated_vn(0,0);
+    vnvnstar = pow(ev->get_integrated_vn(n,0),2) + pow(ev->get_integrated_vn(n,1),2) ; 
+    deltapt_tilde =  (spt-avg_mpt) - cov_deltapt_nch / variance_nch * ( nch - avg_nch ) ; 
+    delta_vnsq_tilde =  (vnvnstar-avg_vnsq) - cov_deltavnsq_nch / variance_nch * ( nch - avg_nch ) ; 
+    sum_dvn2sq += pow(delta_vnsq_tilde,2.);
+    sum_dptsq += pow(deltapt_tilde,2.);
+    sum_dptcu += pow(deltapt_tilde,3.);
+    sum_dpt_dvnsq +=  (deltapt_tilde)*(delta_vnsq_tilde);
+    sum_dptsq_dvnsq +=  pow(deltapt_tilde,2.)*(delta_vnsq_tilde);
+    sum_dptcu_dvnsq +=  pow(deltapt_tilde,3.)*(delta_vnsq_tilde);
+    sum_dpt4_dvnsq  +=  pow(deltapt_tilde,4.)*(delta_vnsq_tilde);
+    sum_dpt_dvnsq_dvnsq += (deltapt_tilde)*(delta_vnsq_tilde)*(delta_vnsq_tilde);
+  }
+  
+  sum_dvn2sq /= event_ID_ens.size() ; 
+  sum_dptsq /= event_ID_ens.size() ; 
+  sum_dptcu /= event_ID_ens.size() ; 
+  sum_dpt_dvnsq /= event_ID_ens.size() ; 
+  sum_dptsq_dvnsq /= event_ID_ens.size() ; 
+  sum_dptcu_dvnsq /= event_ID_ens.size() ; 
+  sum_dpt4_dvnsq /= event_ID_ens.size() ; 
+  sum_dpt_dvnsq_dvnsq /= event_ID_ens.size() ; 
+
+  double sigma_pt = sqrt(sum_dptsq);
+  double sigma_vnsq = sqrt(sum_dvn2sq);
+
+  double num ; 
+  double den ;
+   
+  num = sum_dpt_dvnsq ; 
+  den = pow(sigma_pt,1) * sigma_vnsq ;
+  Cov11 = num  ; 
+  rho11 = num / den ; 
+  
+  num = sum_dptsq_dvnsq ; 
+  den = pow(sigma_pt,2) * sigma_vnsq ;
+  Cov21 = num  ; 
+  rho21 = num / den ; 
+
+  num = sum_dptcu_dvnsq - 3 * sum_dptsq * sum_dpt_dvnsq ; 
+  den = pow(sigma_pt,3) * sigma_vnsq ;
+  Cov31 = num  ; 
+  rho31 = num / den ; 
+
+  num = sum_dpt4_dvnsq - 6 * sum_dptsq *  sum_dptsq_dvnsq - 4 * sum_dptcu * sum_dpt_dvnsq ; 
+  den = pow(sigma_pt,4) * sigma_vnsq ;
+  Cov41 = num  ; 
+  rho41 = num / den ; 
+
+  num = sum_dpt_dvnsq_dvnsq - 2 * avg_vnsq * sum_dpt_dvnsq ; 
+  den = pow(sigma_pt,1) * pow(sigma_vnsq,2);
+  Cov122 = num  ; 
+  rho122 = num / den ; 
+
+}
+
+
 
 
 

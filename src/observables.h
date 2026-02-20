@@ -18,7 +18,8 @@ class observables{
     void output_pt_diff_multiparticle_vn(int n);
     void output_pt_diff_multiparticle_vn_method2(int n);
     void output_meanpt_vnsq_higher_moments(int n);
-    
+    void output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n);
+
   private :
     std::vector<event*> event_arena;
     read_music_output_files* rmof ; 
@@ -38,6 +39,10 @@ class observables{
     void calculate_pt_diff_multiparticle_vn_method2(int n, std::vector<int> event_ID_ens, 
       double& vn_sq, double& vn_fr, std::vector<double>& vn_2_num, std::vector<double>& vn_4_num );
     void calculate_meanpt_vnsq_higher_moments(int n, std::vector<int> event_ID_ens, 
+      double& Cov11, double& rho11, double& Cov21, double& rho21, 
+      double& Cov31, double& rho31, double& Cov41, double& rho41, 
+      double& Cov122, double& rho122 );
+    void calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n, std::vector<int> event_ID_ens, 
       double& Cov11, double& rho11, double& Cov21, double& rho21, 
       double& Cov31, double& rho31, double& Cov41, double& rho41, 
       double& Cov122, double& rho122 );

@@ -70,7 +70,9 @@ int main(int argc, char **argv){
  //obj-> output_pt_diff_multiparticle_vn_method2(3);
  obj-> output_meanpt_vnsq_higher_moments(2);
  obj-> output_meanpt_vnsq_higher_moments(3);
- 
+ obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(2);
+ obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(3);
+
  return 0 ;  
 }
 
