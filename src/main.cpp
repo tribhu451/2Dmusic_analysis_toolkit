@@ -1,78 +1,69 @@
-#include<iostream>
-#include<fstream>
+#include <iostream>
 #include <vector>
+
 #include "event.h"
 #include "read_music_output_files.h"
 #include "observables.h"
 
-
-int main(int argc, char **argv){
-
- int pid = 0 ;  // 0 for charged hadrons
- // kinematics cut below
- int yflag = 1 ; 
- double rapmin = -0.5 ; 
- double rapmax =  0.5 ; 
- double ptmin  =  0.2 ; 
- double ptmax  =  3.0 ; 
-
- std::cout << "========================" << std::endl ; 
- std::cout << " MUSIC analysis-toolkit" << std::endl ; 
- std::cout << "========================" << std::endl ; 
- std::cout << "\n" << std::endl ; 
-
- if(argc < 2){
-    std::cout << "atleast one path required ..." << std::endl ;
-    exit(-1); 
-  }
-
- if(argc > 16){
-    std::cout << "too many paths provided (5 allowed) ..." << std::endl ;
-    exit(-1); 
-  }
+int main(int argc,char** argv)
+{
 
 
- std::vector<std::string> music_output_paths ; 
- 
- for(int ii=2; ii<17; ii++){
-   if(ii==argc){
-     std::cout <<  (ii-1) << " paths provided" << std::endl ; 
-     for(int jj=1; jj<argc; jj++){
-       music_output_paths.push_back(argv[jj]) ;
-     } 
-     break ; 
-   }
- }
- 
- 
- std::cout << "path names : " ; 
- for(long unsigned int ii=0; ii<music_output_paths.size(); ii++){
-   std::cout << music_output_paths[ii] << "/,  " ; 
- }
- std::cout << std::endl ;
- 
- 
- read_music_output_files* rmof = new read_music_output_files(music_output_paths, pid, yflag,  rapmin,  rapmax,  ptmin,  ptmax); 
- rmof->read_pt_differential_stuff();
- rmof->read_pt_integrated_stuff();
- rmof->read_meanpt();
- 
- observables* obj = new observables(rmof, pid, yflag,  rapmin,  rapmax,  ptmin,  ptmax);
- obj->output_average_multiplicity();
- obj->output_meanpt_vnsq_correlation(2);
- obj->output_meanpt_vnsq_correlation(3);
- obj->output_pt_diff_meanpt_vnvnpt_correlation(2);
- obj->output_pt_diff_meanpt_vnvnpt_correlation(3);
- obj->output_pt_diff_meanpt_vnptvnpt_correlation(2);
- obj->output_pt_diff_meanpt_vnptvnpt_correlation(3);
- obj-> output_pt_diff_multiparticle_vn(2);
- obj-> output_pt_diff_multiparticle_vn(3);
- obj-> output_pt_diff_multiparticle_vn_method2(2);
- obj-> output_pt_diff_multiparticle_vn_method2(3);
+    int yflag = 1;
 
- return 0 ;  
+    double rapmin=-0.5;
+    double rapmax= 0.5;
+
+    double ptmin=0.2;
+    double ptmax=3.0;
+
+    int max_Nevents=10000;
+
+    if(argc<2){
+        std::cout<<"Need at least one path\n";
+        return -1;
+    }
+
+    std::vector<std::string> paths;
+    for(int i=1;i<argc;i++)
+        paths.push_back(argv[i]);
+
+    read_music_output_files* rmof =
+        new read_music_output_files(
+            paths,max_Nevents,
+            yflag,
+            rapmin,rapmax,
+            ptmin,ptmax);
+
+    // build charged differential first
+    rmof->compute_differential_vn_charged_hadron();
+
+    // species
+    rmof->compute_integrated_vn_all(ptmin,ptmax);
+    rmof->compute_meanpt_all(ptmin,ptmax);
+
+    observables* obj =
+        new observables(rmof,yflag,
+                        rapmin,rapmax,
+                        ptmin,ptmax);
+
+    obj->output_average_multiplicity_charged_hadrons();
+
+    obj->output_meanpt_vnsq_correlation_charged_hadrons(2);
+    obj->output_meanpt_vnsq_correlation_charged_hadrons(3);
+
+    obj->output_pt_diff_meanpt_vnvnpt_correlation_charged_hadrons(2);
+    obj->output_pt_diff_meanpt_vnvnpt_correlation_charged_hadrons(3);
+
+    obj->output_pt_diff_meanpt_vnptvnpt_correlation_charged_hadrons(2);
+    obj->output_pt_diff_meanpt_vnptvnpt_correlation_charged_hadrons(3);
+
+    obj->output_pt_diff_multiparticle_vn_charged_hadrons(2);
+    obj->output_pt_diff_multiparticle_vn_charged_hadrons(3);
+
+    obj->output_pt_diff_multiparticle_vn_method2_charged_hadrons(2);
+    obj->output_pt_diff_multiparticle_vn_method2_charged_hadrons(3);
+    
+
+    return 0;
 }
-
-
-
-

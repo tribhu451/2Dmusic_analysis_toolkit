@@ -1,261 +1,310 @@
 #include "read_music_output_files.h"
-#include "event.h"
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <iostream>
+#include <cstdlib>
+#include <gsl/gsl_integration.h>
 
-read_music_output_files::read_music_output_files(std::vector<std::string>  aa_music_output_paths, 
-int apid, int ayflag, double arapmin, double arapmax, double aptmin, double aptmax): pid(apid), yflag(ayflag), rapmin(arapmin), rapmax(arapmax), ptmin(aptmin), ptmax(aptmax){
-  music_output_paths = aa_music_output_paths ;
-     
-  // now set how many events do you have
-  // and also set Number of ptbins ans pt-values ?
-  std::ifstream file;
-  int temp_total_music_events = 0 ;
-  int temp_pt_bins=0 ; 
-  for(long unsigned int output_path_index=0; output_path_index < music_output_paths.size() ; output_path_index++ ){
-    for(int ioutputIDX=0; ioutputIDX < 9999 ; ioutputIDX++ ){ // maximum 10,000 outputs/events in a path should be there
-      std::stringstream input_filename;
-      input_filename.str(std::string());
-      input_filename << music_output_paths[output_path_index].c_str() ;
-      input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX;
-      if(pid==0){
-        input_filename << "/vnchpT";
-      }
-      else{
-        std::cout << "the code is not yet updated to read the identified hadron's details ... " << std::endl ;
-        exit(-1); 
-      }
-      if(yflag==1){
-        input_filename << "_y_" ;
-      }
-      else{
-        input_filename << "_eta_" ;
-      }
-      input_filename << rapmin << "_" << rapmax ; 
-      input_filename << ".dat" ;
-      file.open(input_filename.str().c_str(), std::ios::in);
-      if(!file){
-        continue ; 
-      }
-      else{
-        temp_total_music_events ++ ; 
-        if(temp_total_music_events==1){
-          file.getline(buff,450) ; // header
-          int ii=0; 
-          double tempptval, dummy ; 
-          while (ii < 100 &&  file.getline(buff,500)){           
-            iss = new std::istringstream(buff);
-            *iss >> tempptval >> dummy ;
-            //std::cout << "pt = " << tempptval << std::endl ; 
-            ptval.push_back(tempptval) ; 
-            delete iss;
-            temp_pt_bins++ ; 
-            ii++;
-          }
+// =================================================
+// constructor
+// =================================================
+read_music_output_files::read_music_output_files(
+    const std::vector<std::string>& paths,
+    int max_nevents,
+    int ayflag,
+    double arapmin,double arapmax,
+    double aptmin,double aptmax
+)
+: music_output_paths(paths),
+  max_Nevents(max_nevents),
+  yflag(ayflag),
+  rapmin(arapmin),
+  rapmax(arapmax),
+  ptmin(aptmin),
+  ptmax(aptmax)
+{
+    std::ifstream file;
+    std::string line;
+
+    int temp_events=0;
+
+     std::cout << "reading started" << std::endl ; 
+    // ---------- first pass ----------
+    for(const auto& path:music_output_paths){
+        for(int ie=0;ie<max_Nevents;ie++){
+      
+
+            std::ostringstream fname;
+            fname<<path<<"/outputs_"
+                 <<std::setw(3)<<std::setfill('0')<<ie
+                 <<"/Fvnpt-211_y_-0.5_0.5.dat";
+
+            file.open(fname.str());
+            if(!file.is_open()) continue;
+
+            std::cout << "event = " << ie << "  " << fname.str() << std::endl ; 
+            temp_events++;
+
+            if(temp_events==1){
+                std::getline(file,line);
+                double pt,dummy;
+                while(std::getline(file,line)){
+                    std::istringstream iss(line);
+                    if(!(iss>>pt>>dummy)) break;
+                    ptval.push_back(pt);
+                }
+            }
+            file.close();
         }
-        file.close();
-      }
     }
-  }
-  total_music_events = temp_total_music_events ; 
-  music_pt_bins = temp_pt_bins ; 
-  std::cout<< "total MUSIC events = " << total_music_events  << std::endl ; 
-  std::cout<< "total MUSIC pt bins = " << ptval.size()  << std::endl ; 
-  std::cout << "pt-bin      pt-val" << std::endl ; 
-  for(long unsigned int ii = 0 ; ii < ptval.size(); ii++){
-    std::cout << "   " << ii << "       " << ptval[ii] << std::endl ;  
-  }
-  std::cout << "================" << std::endl ;
-  
-  // set up all events info
-  for(int ii=0; ii<total_music_events; ii++){
-    event* ev = new event(music_pt_bins);
-    event_arena.push_back(ev); 
-  }
-  
-}
 
+    total_music_events=temp_events;
+    music_pt_bins=ptval.size();
 
-void read_music_output_files::read_pt_integrated_stuff(){
-  std::ifstream file;
-  int temp_total_music_events = 0 ;
-  double Nch, v1cos, v1sin, v2cos, v2sin, v3cos, v3sin, v4cos, v4sin, dummy ; 
-  for(long unsigned int output_path_index=0; output_path_index < music_output_paths.size() ; output_path_index++ ){
-    for(int ioutputIDX=0; ioutputIDX < 9999 ; ioutputIDX++ ){ // maximum 10,000 outputs/events in a path should be there
-      std::stringstream input_filename;
-      input_filename.str(std::string());
-      input_filename << music_output_paths[output_path_index].c_str() ;
-      input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX; 
-      if(pid==0){
-        input_filename << "/vnch_pT_";
-      }
-      input_filename << ptmin << "_" << ptmax ;
-      if(yflag==1){
-        input_filename << "_y_" ;
-      }
-      else{
-        input_filename << "_eta_" ;
-      }
-       input_filename << rapmin << "_" << rapmax ; 
-       input_filename << ".dat" ;
-      file.open(input_filename.str().c_str(), std::ios::in);
-      if(!file){
-        continue ; 
-      }
-      else{
-        file.getline(buff,500) ; // header
-        file.getline(buff,500) ; // line of interest
-        iss = new std::istringstream(buff);
-        *iss >> Nch >> v1cos >> v1sin >> v2cos >> v2sin >> v3cos >> v3sin >> v4cos >> v4sin >> dummy ;
-        event_arena[temp_total_music_events]->set_integrated_vn(0,0,Nch) ; 
-        event_arena[temp_total_music_events]->set_integrated_vn(0,1,0) ; 
-        event_arena[temp_total_music_events]->set_integrated_vn(1,0,v1cos) ; 
-        event_arena[temp_total_music_events]->set_integrated_vn(1,1,v1sin) ; 
-        event_arena[temp_total_music_events]->set_integrated_vn(2,0,v2cos) ; 
-        event_arena[temp_total_music_events]->set_integrated_vn(2,1,v2sin) ; 
-        event_arena[temp_total_music_events]->set_integrated_vn(3,0,v3cos) ; 
-        event_arena[temp_total_music_events]->set_integrated_vn(3,1,v3sin) ; 
-        event_arena[temp_total_music_events]->set_integrated_vn(4,0,v4cos) ; 
-        event_arena[temp_total_music_events]->set_integrated_vn(4,1,v4sin) ; 
-        delete iss ; 
-        file.close();
-        temp_total_music_events ++ ; 
-      }
-    } // iouputIdx
-  } // loop over paths
-  
-  if(temp_total_music_events == 0){
-    std::cout << "reading pt integrated quantities failure !!! Not got a single file of the given kinematic cut" << std::endl ; 
-    exit(-1);
-  }
-  
-    if(temp_total_music_events > total_music_events || temp_total_music_events < total_music_events){
-     std::cout << "reading pt integrated quantities failure !!! unexpectedly reading more/less events" << std::endl ; 
-     exit(-1);
-   }
-  
-}
-
-
-
-void read_music_output_files::read_meanpt(){
-  std::ifstream file;
-  int temp_total_music_events = 0 ;
-  double mpt ; 
-  for(long unsigned int output_path_index=0; output_path_index < music_output_paths.size() ; output_path_index++ ){
-    for(int ioutputIDX=0; ioutputIDX < 9999 ; ioutputIDX++ ){ // maximum 10,000 outputs/events in a path should be there
-      std::stringstream input_filename;
-      input_filename.str(std::string());
-      input_filename << music_output_paths[output_path_index].c_str() ;
-      input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX; 
-      if(pid==0){
-        input_filename << "/mean_pt_ch_pt_";
-      }
-      input_filename << ptmin << "_" << ptmax ;
-      if(yflag==1){
-        input_filename << "_y_" ;
-      }
-      else{
-        input_filename << "_eta_" ;
-      }
-       input_filename << rapmin << "_" << rapmax ; 
-       input_filename << ".dat" ;
-      file.open(input_filename.str().c_str(), std::ios::in);
-      if(!file){
-        continue ; 
-      }
-      else{
-        file.getline(buff,500) ; // header
-        file.getline(buff,500) ; // line of interest
-        iss = new std::istringstream(buff);
-        *iss >> mpt ;
-        event_arena[temp_total_music_events]->set_meanpt(mpt) ; 
-        delete iss ; 
-        file.close();
-        temp_total_music_events ++ ; 
-      }
-    } // iouputIdx
-  } // loop over paths
-  
-    if(temp_total_music_events == 0){
-     std::cout << "reading mean-pt failure !!! Not got a single file of the given kinematic cut" << std::endl ; 
-     exit(-1);
+    std::cout << "Nptbins = " << music_pt_bins << std::endl ; 
+    std::cout << "Nevents = " << total_music_events << std::endl ; 
+    if(total_music_events==0){
+        std::cerr<<"No events found\n";
+        std::exit(EXIT_FAILURE);
     }
-    if(temp_total_music_events > total_music_events || temp_total_music_events < total_music_events){
-     std::cout << "reading mean-pt failure !!! unexpectedly reading more/less events" << std::endl ; 
-     exit(-1);
-   }
-  
+
+    for(int i=0;i<total_music_events;i++)
+        event_arena.push_back(new event(music_pt_bins));
+
+    // ---------- second pass ----------
+    int iev=0;
+
+    for(const auto& path:music_output_paths){
+        for(int ie=0;ie<max_Nevents;ie++){
+
+            bool found=false;
+
+            for(int PID:PIDLIST){
+
+                std::ostringstream fname;
+                fname<<path<<"/outputs_"
+                     <<std::setw(3)<<std::setfill('0')<<ie
+                     <<"/Fvnpt-"<<PID<<"_y_-0.5_0.5.dat";
+
+                file.open(fname.str());
+                if(!file.is_open()) continue;
+
+                found=true;
+                std::getline(file,line);
+
+                double pt,dn,v1c,v1s,v2c,v2s,v3c,v3s,v4c,v4s,dum;
+                int ipt=0;
+                event* ev=event_arena[iev];
+
+                while(std::getline(file,line)&&ipt<music_pt_bins){
+
+                    std::istringstream iss(line);
+                    iss>>pt>>dn
+                       >>v1c>>v1s>>v2c>>v2s>>v3c>>v3s>>v4c>>v4s>>dum;
+
+                    ev->set_differential_vn(PID,0,0,ipt,dn);
+
+                    ev->set_differential_vn(PID,1,0,ipt,v1c);
+                    ev->set_differential_vn(PID,1,1,ipt,v1s);
+                    ev->set_differential_vn(PID,2,0,ipt,v2c);
+                    ev->set_differential_vn(PID,2,1,ipt,v2s);
+                    ev->set_differential_vn(PID,3,0,ipt,v3c);
+                    ev->set_differential_vn(PID,3,1,ipt,v3s);
+                    ev->set_differential_vn(PID,4,0,ipt,v4c);
+                    ev->set_differential_vn(PID,4,1,ipt,v4s);
+
+                    ipt++;
+                }
+                file.close();
+            }
+
+            if(found) iev++;
+        }
+    }
+}
+
+// =================================================
+// destructor
+// =================================================
+read_music_output_files::~read_music_output_files(){
+    for(auto e:event_arena) delete e;
+}
+
+
+// =================================================
+// integration helpers
+// =================================================
+double read_music_output_files::integrate_spectrum(
+        const std::vector<double>& _pt,
+        const std::vector<double>& f,
+        double minpt,double maxpt)
+{
+ 
+    int npt = _pt.size() ; 
+    double dndpt[npt];
+    double pt[npt];
+    for (int ipt = 0; ipt < npt; ipt++) {
+        pt[ipt]    = _pt[ipt];
+        dndpt[ipt] = f[ipt] * 2 * M_PI * pt[ipt] ;  // dN/dpt
+    }
+    gsl_interp_accel *numacc = gsl_interp_accel_alloc ();
+    gsl_spline *numspline = gsl_spline_alloc (gsl_interp_linear, npt);
+    gsl_spline_init (numspline, pt , dndpt , npt);
+    
+    double num = gsl_spline_eval_integ(numspline, minpt, maxpt, numacc);
+
+    gsl_spline_free (numspline);
+    gsl_interp_accel_free (numacc);
+    
+    return num;
+}
+
+double read_music_output_files::integrate_spectrum_weighted(
+        const std::vector<double>& _pt,
+        const std::vector<double>& f,
+        const std::vector<double>& w,
+        double minpt,double maxpt)
+{
+    int npt = _pt.size() ; 
+    double dndpt[npt];
+    double pt[npt];
+    for (int ipt = 0; ipt < npt; ipt++) {
+        pt[ipt]    = _pt[ipt];
+        dndpt[ipt] = w[ipt] * f[ipt] * 2 * M_PI * pt[ipt] ;  //  dN/dpt * w(pt)
+    }
+    gsl_interp_accel *numacc = gsl_interp_accel_alloc ();
+    gsl_spline *numspline = gsl_spline_alloc (gsl_interp_linear, npt);
+    gsl_spline_init (numspline, pt , dndpt , npt);
+    
+    double num = gsl_spline_eval_integ(numspline, minpt, maxpt, numacc);
+
+    gsl_spline_free (numspline);
+    gsl_interp_accel_free (numacc);
+    
+    return num;
 }
 
 
 
-void read_music_output_files::read_pt_differential_stuff(){
-  std::ifstream file;
-  int temp_total_music_events = 0 ;
-  double ptv, dnptdptdy, v1cos, v1sin, v2cos, v2sin, v3cos, v3sin, v4cos, v4sin, dummy ; 
-  for(long unsigned int output_path_index=0; output_path_index < music_output_paths.size() ; output_path_index++ ){
-    for(int ioutputIDX=0; ioutputIDX < 9999 ; ioutputIDX++ ){ // maximum 10,000 outputs/events in a path should be there
-      std::stringstream input_filename;
-      input_filename.str(std::string());
-      input_filename << music_output_paths[output_path_index].c_str() ;
-      input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX; 
-      if(pid==0){
-        input_filename << "/vnchpT";
-      }
-      if(yflag==1){
-        input_filename << "_y_" ;
-      }
-      else{
-        input_filename << "_eta_" ;
-      }
-       input_filename << rapmin << "_" << rapmax ; 
-       input_filename << ".dat" ;
-      file.open(input_filename.str().c_str(), std::ios::in);
-      if(!file){
-        continue ; 
-      }
-      else{
-        file.getline(buff,500) ; // header
-        int ii=0;
-        while (ii < 100 &&  file.getline(buff,500)){           
-          iss = new std::istringstream(buff);
-          *iss >> ptv >> dnptdptdy >> v1cos >> v1sin >> v2cos >> v2sin >> v3cos >> v3sin >> v4cos >> v4sin >> dummy ;
-          if(temp_total_music_events==1  && ii==5){ 
-            if( fabs(ptv-ptval[ii]) > 0.0001){
-               std::cout << "pt bin error ...   ii = "  
-               << ii << "  pt = " << ptval[ii] 
-               << "  readptv = " << ptv << "   " 
-               << input_filename.str() 
-               << std::endl; 
-               exit(-1);
-             }   
-          }
-          event_arena[temp_total_music_events]->set_differential_vn(0,0,ii,dnptdptdy) ; 
-          event_arena[temp_total_music_events]->set_differential_vn(0,1,ii,0) ; 
-          event_arena[temp_total_music_events]->set_differential_vn(1,0,ii,v1cos) ; 
-          event_arena[temp_total_music_events]->set_differential_vn(1,1,ii,v1sin) ; 
-          event_arena[temp_total_music_events]->set_differential_vn(2,0,ii,v2cos) ; 
-          event_arena[temp_total_music_events]->set_differential_vn(2,1,ii,v2sin) ; 
-          event_arena[temp_total_music_events]->set_differential_vn(3,0,ii,v3cos) ; 
-          event_arena[temp_total_music_events]->set_differential_vn(3,1,ii,v3sin) ; 
-          event_arena[temp_total_music_events]->set_differential_vn(4,0,ii,v4cos) ; 
-          event_arena[temp_total_music_events]->set_differential_vn(4,1,ii,v4sin) ; 
-          delete iss ;
-          ii++ ; 
-        } 
-        file.close();
-        temp_total_music_events ++ ; 
-      }
-    } // iouputIdx
-  } // loop over paths
-  
-  if(temp_total_music_events == 0){
-    std::cout << "reading pt differential failure !!! Not got a single file of the given kinematic cut" << std::endl ; 
-    exit(-1);
-  }
-  if(temp_total_music_events > total_music_events || temp_total_music_events < total_music_events ){
-     std::cout << "reading pt differential failure !!! unexpectedly reading more/less events" << std::endl ; 
-     exit(-1);
-   }
+// =================================================
+// charged differential vn
+// =================================================
+void read_music_output_files::compute_differential_vn_charged_hadron(){
+
+    for(auto ev:event_arena){
+        for(int ipt=0; ipt<music_pt_bins; ipt++){
+
+            double total=0;
+            double sum[5][2]={{0}};
+
+            for(int PID:PIDLIST){
+
+                double yield=
+                    ev->get_pt_differential_vn(PID,0,0,ipt);
+
+                total+=yield;
+
+                for(int h=1;h<5;h++)
+                for(int ri=0;ri<2;ri++)
+                    sum[h][ri]+=yield*
+                        ev->get_pt_differential_vn(PID,h,ri,ipt);
+            }
+
+            if(total<=0) continue;
+
+            for(int h=1;h<5;h++)
+            for(int ri=0;ri<2;ri++)
+                ev->set_differential_vn(0,h,ri,ipt,
+                    sum[h][ri]/total);
+
+            ev->set_differential_vn(0,0,0,ipt,total);
+        }
+    }
+}
+
+
+// =================================================
+// calculators
+// =================================================
+
+
+// =================================================
+// species mean pt
+// =================================================
+double read_music_output_files::calc_meanpt(
+        event* ev,int PID,double ptmin,double ptmax)
+{
+    std::vector<double> spec(music_pt_bins);
+
+    for(int i=0;i<music_pt_bins;i++){
+        spec[i]=ev->get_pt_differential_vn(PID,0,0,i);
+    }
+
+    double numer=integrate_spectrum_weighted(ptval,spec,ptval,ptmin,ptmax);
+    double denom=integrate_spectrum(ptval,spec,ptmin,ptmax);
+    if(denom<=0) return 1e-20;
+
+    return numer/denom;
+}
+
+double read_music_output_files::calc_integrated_vn(
+        event* ev,int PID,int h,int ri,
+        double ptmin,double ptmax)
+{
+    std::vector<double> spec(music_pt_bins);
+    std::vector<double> vn(music_pt_bins);
+
+    for(int i=0;i<music_pt_bins;i++){
+        spec[i]=ev->get_pt_differential_vn(PID,0,0,i);
+        vn[i]=ev->get_pt_differential_vn(PID,h,ri,i);
+    }
+
+    double numer=integrate_spectrum_weighted(ptval,spec,vn,ptmin,ptmax);
+    double denom=integrate_spectrum(ptval,spec,ptmin,ptmax);
+    if(denom<=0) return 0;
+
+    if(h==0) 
+      return denom; 
+    else 
+      return numer/denom;
+}
+
+
+// =================================================
+//  setters
+// =================================================
+void read_music_output_files::compute_meanpt_all(
+        double ptmin,double ptmax)
+{
+    for(auto ev:event_arena){
+            ev->set_mean_pt(0,
+                calc_meanpt(ev,0,ptmin,ptmax));
+        for(int PID:PIDLIST){
+            ev->set_mean_pt(PID,
+                calc_meanpt(ev,PID,ptmin,ptmax));
+        }};
+}
+
+
+
+void read_music_output_files::compute_integrated_vn_all(
+        double ptmin,double ptmax)
+{
+    for(auto ev:event_arena){
+        for(int PID:PIDLIST){
+            for(int h=0;h<5;h++){
+                for(int ri=0;ri<2;ri++){
+                    ev->set_integrated_vn(PID,h,ri,
+                        calc_integrated_vn(ev,PID,h,ri,ptmin,ptmax));
+         }}}};
+
+    for(auto ev:event_arena){
+            for(int h=0;h<5;h++){
+                for(int ri=0;ri<2;ri++){
+                    ev->set_integrated_vn(0,h,ri,
+                        calc_integrated_vn(ev,0,h,ri,ptmin,ptmax));
+         }}};
 }
 
 
