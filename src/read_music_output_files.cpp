@@ -37,7 +37,7 @@ read_music_output_files::read_music_output_files(
 
             std::ostringstream fname;
             fname<<path<<"/outputs_"
-                 <<std::setw(3)<<std::setfill('0')<<ie
+                 <<std::setw(4)<<std::setfill('0')<<ie
                  <<"/Fvnpt-211_y_-0.5_0.5.dat";
 
             file.open(fname.str());
@@ -84,7 +84,7 @@ read_music_output_files::read_music_output_files(
 
                 std::ostringstream fname;
                 fname<<path<<"/outputs_"
-                     <<std::setw(3)<<std::setfill('0')<<ie
+                     <<std::setw(4)<<std::setfill('0')<<ie
                      <<"/Fvnpt-"<<PID<<"_y_-0.5_0.5.dat";
 
                 file.open(fname.str());

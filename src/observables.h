@@ -18,6 +18,10 @@ class observables{
     void output_pt_diff_multiparticle_vn_charged_hadrons(int n);
     void output_pt_diff_multiparticle_vn_method2_charged_hadrons(int n);
     void output_average_multiplicity_charged_hadrons();
+    void output_meanpt_vnsq_higher_moments_charged_hadrons(int n);
+    void output_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_hadrons(int n);
+    void output_Bozek_rn_pion_proton(int n);
+
 
   private :
     std::vector<event*> event_arena;
@@ -37,6 +41,16 @@ class observables{
       std::vector<double>& vn_2, std::vector<double>& vn_4);
     void calculate_pt_diff_multiparticle_vn_method2_charged_hadrons(int n, std::vector<int> event_ID_ens, 
       double& vn_sq, double& vn_fr, std::vector<double>& vn_2_num, std::vector<double>& vn_4_num );
+    void calculate_meanpt_vnsq_higher_moments_charged_hadrons(int n, std::vector<int> event_ID_ens, 
+      double& Cov11, double& rho11, double& Cov21, double& rho21, 
+      double& Cov31, double& rho31, double& Cov41, double& rho41, 
+      double& Cov122, double& rho122 );
+    void calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_hadrons(int n, std::vector<int> event_ID_ens, 
+      double& Cov11, double& rho11, double& Cov21, double& rho21, 
+      double& Cov31, double& rho31, double& Cov41, double& rho41, 
+      double& Cov122, double& rho122 );
+    void calculate_Bozek_rn_pion_proton(int n, std::vector<int> event_ID_ens, 
+      double& rn);
    
     // kinematics cut     
     int yflag ; double rapmin ; 

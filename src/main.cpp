@@ -17,7 +17,7 @@ int main(int argc,char** argv)
     double ptmin=0.2;
     double ptmax=3.0;
 
-    int max_Nevents=10000;
+    int max_Nevents=9999;
 
     if(argc<2){
         std::cout<<"Need at least one path\n";
@@ -48,7 +48,7 @@ int main(int argc,char** argv)
                         ptmin,ptmax);
 
     obj->output_average_multiplicity_charged_hadrons();
-
+    /*
     obj->output_meanpt_vnsq_correlation_charged_hadrons(2);
     obj->output_meanpt_vnsq_correlation_charged_hadrons(3);
 
@@ -64,6 +64,17 @@ int main(int argc,char** argv)
     obj->output_pt_diff_multiparticle_vn_method2_charged_hadrons(2);
     obj->output_pt_diff_multiparticle_vn_method2_charged_hadrons(3);
     
-
+    obj-> output_meanpt_vnsq_higher_moments_charged_hadrons(2);
+    obj-> output_meanpt_vnsq_higher_moments_charged_hadrons(3);
+    
+    obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_hadrons(2);
+    obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_hadrons(3);
+    */
+    obj-> output_Bozek_rn_pion_proton(2);
+    obj-> output_Bozek_rn_pion_proton(3);
+    
     return 0;
 }
+
+
+
