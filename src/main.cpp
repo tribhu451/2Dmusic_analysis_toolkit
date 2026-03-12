@@ -14,7 +14,7 @@ int main(int argc,char** argv)
     double rapmin=-0.5;
     double rapmax= 0.5;
 
-    double ptmin=0.2;
+    double ptmin=0.01;
     double ptmax=3.0;
 
     int max_Nevents=9999;
@@ -47,7 +47,7 @@ int main(int argc,char** argv)
                         rapmin,rapmax,
                         ptmin,ptmax);
 
-    obj->output_average_multiplicity_charged_hadrons();
+    obj->output_dndy_or_dndeta();
     /*
     obj->output_meanpt_vnsq_correlation_charged_hadrons(2);
     obj->output_meanpt_vnsq_correlation_charged_hadrons(3);

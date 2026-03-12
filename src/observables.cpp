@@ -18,41 +18,55 @@ std::vector<int> observables::get_an_event_ensemble(){
 }
 
 
-void observables::output_average_multiplicity_charged_hadrons(){
-  double net_mult = 0 ;
-  double net_proton = 0 ;
-  for(int ii=0; ii<rmof->get_total_events(); ii++){
-    int eventID = ii ; 
-    event* ev = rmof->get_event(eventID) ; 
-    double mult = ev->get_integrated_vn(0,0,0);
-    double prot = ev->get_integrated_vn(2212,0,0);
-    double anti_prot = ev->get_integrated_vn(-2212,0,0);
-    net_mult += mult ; 
-    net_proton += (prot - anti_prot) ; 
-  }
-  net_mult /= rmof->get_total_events();
-  net_proton /= rmof->get_total_events();
-  
+void observables::output_dndy_or_dndeta(){
+   // species list ( charged hadron PID=0 here)
+   const std::vector<int> PIDLIST =
+        {0, 211,-211,321,-321,2212,-2212};
+  double net_mult=0;
   std::ofstream mFile;
   std::stringstream output_filename;
-  output_filename.str("");
-  output_filename << "results/Net_multiplicty";
-  output_filename << "_pt_";
-  output_filename << ptmin << "_" << ptmax ;
-  if(yflag==1){
-   output_filename << "_y_" ;
-  }
-  else{
-   output_filename << "_eta_" ;
-  }
-  output_filename << rapmin << "_" << rapmax ;
-  output_filename << ".dat";
-  mFile.open(output_filename.str().c_str(), std::ios::out );
-  mFile << "#Net-Multiplicity  Net-proton" << std::endl ;
-  mFile <<  net_mult << "  " << net_proton << std::endl ; 
-  mFile.close();
 
+  for(int PID:PIDLIST){
+    net_mult = 0. ;
+    for(int ii=0; ii<rmof->get_total_events(); ii++){
+      int eventID = ii ; 
+      event* ev = rmof->get_event(eventID) ; 
+      double mult = ev->get_integrated_vn(PID,0,0); // first index is for PID, second for harmonics , third for real/imaginary
+      net_mult += mult ; 
+    }
+    net_mult /= rmof->get_total_events(); // N
+    net_mult /= (rapmax-rapmin);   // dN/deta  or dN/dy
+
+    output_filename.str("");
+    output_filename << "results/";
+    if(yflag==1){
+      output_filename << "dndy_";}
+    else{
+      output_filename << "dndeta_";}
+    if(PID==0){
+      output_filename << "charged_hadrons";}
+    else{
+      output_filename << PID;}
+    output_filename << "_pt_";
+    output_filename << ptmin << "_" << ptmax ;
+    if(yflag==1){
+     output_filename << "_y_" ; }
+    else{
+     output_filename << "_eta_" ;}
+    output_filename << rapmin << "_" << rapmax ;
+    output_filename << ".dat";
+    mFile.open(output_filename.str().c_str(), std::ios::out );
+    if(yflag==1){
+      mFile << "#dn/dy" << std::endl ;}
+    else{
+      mFile << "#dn/deta" << std::endl ;
+    }
+    mFile <<  net_mult  << std::endl ; 
+    mFile.close();
+  }
+  
 }
+
 
 
 

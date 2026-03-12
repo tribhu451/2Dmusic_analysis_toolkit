@@ -17,7 +17,7 @@ class observables{
     void output_pt_diff_meanpt_vnptvnpt_correlation_charged_hadrons(int n);
     void output_pt_diff_multiparticle_vn_charged_hadrons(int n);
     void output_pt_diff_multiparticle_vn_method2_charged_hadrons(int n);
-    void output_average_multiplicity_charged_hadrons();
+    void output_dndy_or_dndeta();
     void output_meanpt_vnsq_higher_moments_charged_hadrons(int n);
     void output_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_hadrons(int n);
     void output_Bozek_rn_pion_proton(int n);
