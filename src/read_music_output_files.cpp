@@ -24,6 +24,8 @@ read_music_output_files::read_music_output_files(
   ptmin(aptmin),
   ptmax(aptmax)
 {
+    int max_Nrun = 100;
+
     std::ifstream file;
     std::string line;
 
@@ -32,18 +34,20 @@ read_music_output_files::read_music_output_files(
      std::cout << "reading started" << std::endl ; 
     // ---------- first pass ----------
     for(const auto& path:music_output_paths){
-        for(int ie=0;ie<max_Nevents;ie++){
+        for(int irun=0;irun<max_Nrun;irun++){     // for RUN* folders
+          for(int ie=0;ie<max_Nevents;ie++){
       
 
             std::ostringstream fname;
-            fname<<path<<"/outputs_"
-                 <<std::setw(4)<<std::setfill('0')<<ie
+            fname<<path<<"/RUN"<<irun<<"/outputs_"
+            //fname<<path<<"/outputs_"
+                 <<std::setw(3)<<std::setfill('0')<<ie
                  <<"/Fvnpt-211_y_-0.5_0.5.dat";
 
             file.open(fname.str());
             if(!file.is_open()) continue;
 
-            std::cout << "event = " << ie << "  " << fname.str() << std::endl ; 
+            std::cout << "event = " << temp_events << "  " << fname.str() << std::endl ; 
             temp_events++;
 
             if(temp_events==1){
@@ -56,7 +60,8 @@ read_music_output_files::read_music_output_files(
                 }
             }
             file.close();
-        }
+          } 
+        } // RUN folder loop
     }
 
     total_music_events=temp_events;
@@ -76,15 +81,16 @@ read_music_output_files::read_music_output_files(
     int iev=0;
 
     for(const auto& path:music_output_paths){
-        for(int ie=0;ie<max_Nevents;ie++){
-
+        for(int irun=0;irun<max_Nrun;irun++){     // for RUN* folders
+          for(int ie=0;ie<max_Nevents;ie++){
             bool found=false;
 
             for(int PID:PIDLIST){
 
                 std::ostringstream fname;
-                fname<<path<<"/outputs_"
-                     <<std::setw(4)<<std::setfill('0')<<ie
+                fname<<path<<"/RUN"<<irun<<"/outputs_"
+                //fname<<path<<"/outputs_"
+                     <<std::setw(3)<<std::setfill('0')<<ie
                      <<"/Fvnpt-"<<PID<<"_y_-0.5_0.5.dat";
 
                 file.open(fname.str());
@@ -120,7 +126,10 @@ read_music_output_files::read_music_output_files(
             }
 
             if(found) iev++;
-        }
+
+          } 
+        } // RUN folder loop
+
     }
 }
 
@@ -308,5 +317,89 @@ void read_music_output_files::compute_integrated_vn_all(
 }
 
 
+
+
+
+void read_music_output_files::initial( const std::vector<std::string>& paths)
+{
+
+  double ev_av_Reps = 0 ;
+  double ev_av_Rrho = 0 ;
+  
+  std::fstream file ; 
+  std::istringstream* iss;
+  char buff[400];
+
+   // read initial profile ,  calculate observable and set it to events.
+  int temp_total_music_events = 0 ;
+  double dx, dy, xmin, ymin, e2, e3, rr, phi, ss, rho, ta, tb, tr, rhoa, rhob ; 
+  int Nx, Ny ;
+  double xgrid, ygrid ;  
+  std::string dummy_str ; 
+  for(long unsigned int output_path_index=0; output_path_index < paths.size() ; output_path_index++ ){
+     for(int ioutputIDX=0; ioutputIDX < 1000 ; ioutputIDX++ ){ 
+      std::stringstream input_filename;
+      input_filename.str(std::string());
+      input_filename << paths[output_path_index].c_str() ;
+      input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX; 
+      input_filename << "/input_profile.init" ;
+      file.open(input_filename.str().c_str(), std::ios::in);
+      if(!file){
+        continue ; 
+      }
+      else{
+        file.getline(buff,500) ; // header
+         iss = new std::istringstream(buff);
+        *iss >> dummy_str >> dummy_str >> dummy_str >> Nx >> dx ;
+         delete iss ; 
+         
+        Ny = Nx; 
+        dy = dx ;
+        
+        double total_S = 0. ; 
+        double total_rho = 0. ; 
+        double total_R = 0. ;
+        double total_R_baryon = 0. ;
+        double xcm = 0. ;
+        double ycm = 0. ;  
+        for(int ix=0; ix<Nx; ix++){
+           for(int iy=0; iy<Ny; iy++){
+             file.getline(buff,500) ; // line of interest
+             iss = new std::istringstream(buff);
+             *iss >> xgrid >> ygrid >> ta >> tb >> tr >> rhoa >> rhob ;
+             delete iss ; 
+             ss = sqrt( fabs(ta) * fabs(tb) );
+             rho = sqrt( fabs(rhoa) * fabs(rhob) );
+             xcm += xgrid * ss * dx * dy ; 
+             ycm += ygrid * ss * dx * dy ; 
+             total_S += ss * dx * dy ; 
+             total_rho += rho * dx * dy ; 
+             total_R += (xgrid*xgrid+ygrid*ygrid) * ss * dx * dy ; 
+             total_R_baryon += (xgrid*xgrid+ygrid*ygrid) * rho * dx * dy ; 
+           }
+         }  
+        file.close();
+        
+        xcm /= total_S ; 
+        ycm /= total_S ; 
+        total_R /= total_S ; 
+        total_R_baryon /= total_S ;      
+     
+        std::cout << "# " << temp_total_music_events << "  " << total_S << "  " << total_R  << "  " << total_R_baryon  << std::endl ; 
+            
+        ev_av_Reps += total_R ; 
+        ev_av_Rrho += total_R_baryon ;             
+            
+        temp_total_music_events ++ ; 
+      }
+    } // iouputIdx
+  } // loop over paths
+   
+   ev_av_Reps /= temp_total_music_events ; 
+   ev_av_Rrho /= temp_total_music_events ;
+   
+   std::cout << "# (  Final result : )     R_eps=" <<  ev_av_Reps  << "     R_rho=" << ev_av_Rrho << "  "  << std::endl ; 
+    
+}
 
 

@@ -19,9 +19,10 @@ class observables{
     void output_pt_diff_multiparticle_vn_method2_charged_hadrons(int n);
     void output_dndy_or_dndeta();
     void output_meanpt_vnsq_higher_moments_charged_hadrons(int n);
-    void output_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_hadrons(int n);
-    void output_Bozek_rn_pion_proton(int n);
-
+    void output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n, int PID);
+    void output_Bozek_rn(int n,int PID1, int PID2);
+    void output_meanpt_and_sigma_pt();
+    void output_ebe_meanpt_correlation_hpm_proton();
 
   private :
     std::vector<event*> event_arena;
@@ -45,13 +46,16 @@ class observables{
       double& Cov11, double& rho11, double& Cov21, double& rho21, 
       double& Cov31, double& rho31, double& Cov41, double& rho41, 
       double& Cov122, double& rho122 );
-    void calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_hadrons(int n, std::vector<int> event_ID_ens, 
+    void calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n, int PID, std::vector<int> event_ID_ens, 
       double& Cov11, double& rho11, double& Cov21, double& rho21, 
       double& Cov31, double& rho31, double& Cov41, double& rho41, 
       double& Cov122, double& rho122 );
-    void calculate_Bozek_rn_pion_proton(int n, std::vector<int> event_ID_ens, 
+    void calculate_Bozek_rn(int n, int PID1, int PID2, std::vector<int> event_ID_ens, 
       double& rn);
-   
+    void calculate_meanpt_and_sigma_pt(int PID, std::vector<int> event_ID_ens, 
+     double&  mPt, double&  SigmaPt, double&  SigmaPtSqr);
+    void calculate_ebe_meanpt_correlation_hpm_proton(std::vector<int> event_ID_ens, double& person); 
+    
     // kinematics cut     
     int yflag ; double rapmin ; 
     double rapmax ; double ptmin ; double ptmax ; 

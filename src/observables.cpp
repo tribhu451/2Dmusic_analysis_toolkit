@@ -69,6 +69,158 @@ void observables::output_dndy_or_dndeta(){
 
 
 
+void observables::output_meanpt_and_sigma_pt(){
+    std::vector<int> event_ID_ens;
+   // species list ( charged hadron PID=0 here)
+   const std::vector<int> PIDLIST =
+        {0, 211,-211,321,-321,2212,-2212};
+   std::ofstream mFile;
+   std::stringstream output_filename;
+   double Mpt, Spt, SptSq;
+
+   for(int PID:PIDLIST){
+     double sumx = 0. ; 
+     double sumx2 = 0. ; 
+     double sumy = 0. ; 
+     double sumy2 = 0. ; 
+     double sumz = 0. ; 
+     double sumz2 = 0. ; 
+   for(int ii=0; ii<rmof->get_total_events(); ii++){
+     event_ID_ens = get_an_event_ensemble();
+     // calculate correlation of a given ensemble
+     calculate_meanpt_and_sigma_pt(PID,event_ID_ens, Mpt, Spt, SptSq);
+     sumx  += Mpt ; 
+     sumx2 += pow(Mpt,2); 
+     sumy  += Spt ; 
+     sumy2 += pow(Spt,2); 
+     sumz  += SptSq ; 
+     sumz2 += pow(SptSq,2); 
+   }
+
+    sumx  /= rmof->get_total_events();
+    sumx2 /= rmof->get_total_events();
+    sumy  /= rmof->get_total_events();
+    sumy2 /= rmof->get_total_events();
+    sumz  /= rmof->get_total_events();
+    sumz2 /= rmof->get_total_events();
+ 
+    output_filename.str("");
+    output_filename << "results/";
+    output_filename << "meanpt_and_sigmapt_";
+    if(PID==0){
+      output_filename << "charged_hadrons";}
+    else{
+      output_filename << PID;}
+    output_filename << "_pt_";
+    output_filename << ptmin << "_" << ptmax ;
+    if(yflag==1){
+     output_filename << "_y_" ; }
+    else{
+     output_filename << "_eta_" ;}
+    output_filename << rapmin << "_" << rapmax ;
+    output_filename << ".dat";
+    mFile.open(output_filename.str().c_str(), std::ios::out );
+
+    mFile << "#<[pt]>    error   Sigma_[pt]  error    Var([pt])    error" << std::endl ;
+    mFile << sumx << "  " << sqrt( sumx2 - sumx * sumx ) << "  " 
+    << sumy << "  " << sqrt( sumy2 - sumy * sumy ) << "  " 
+    << sumz << "  " << sqrt( sumz2 - sumz * sumz )  << std::endl ; 
+    mFile.close();
+  }
+  
+}
+
+
+void observables::calculate_meanpt_and_sigma_pt(int PID, std::vector<int> event_ID_ens, 
+     double&  mPt, double&  SigmaPt, double&  SigmaPtSqr){
+  // calculate the observable for one ensemble //
+  double sumpt = 0. ; 
+  double sumptsq = 0. ; 
+   
+  for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
+    int eventID = event_ID_ens[ii] ; 
+    event* ev = rmof->get_event(eventID) ; 
+    double pt = ev->get_mean_pt(PID);
+    sumpt += pt ; 
+    sumptsq += pow(pt,2);
+  }
+  
+  sumpt /= event_ID_ens.size() ; 
+  sumptsq /= event_ID_ens.size() ;
+  mPt =  sumpt ; 
+  SigmaPt = sqrt(sumptsq - sumpt * sumpt) ; 
+  SigmaPtSqr = sumptsq - sumpt * sumpt ; 
+}
+
+
+
+void observables::output_ebe_meanpt_correlation_hpm_proton(){
+   std::vector<int> event_ID_ens;
+   std::ofstream mFile;
+   std::stringstream output_filename;
+   double pearson;
+   double sumx = 0. ; 
+   double sumx2 = 0. ; 
+   for(int ii=0; ii<rmof->get_total_events(); ii++){
+     event_ID_ens = get_an_event_ensemble();
+     // calculate correlation of a given ensemble
+     calculate_ebe_meanpt_correlation_hpm_proton(event_ID_ens,pearson);
+     sumx  += pearson ; 
+     sumx2 += pow(pearson,2); 
+   }
+
+    sumx  /= rmof->get_total_events();
+    sumx2 /= rmof->get_total_events();
+
+    output_filename.str("");
+    output_filename << "results/";
+    output_filename << "ebe_meanpt_pearson_correlation_hpm_proton";
+    output_filename << "_pt_";
+    output_filename << ptmin << "_" << ptmax ;
+    if(yflag==1){
+     output_filename << "_y_" ; }
+    else{
+     output_filename << "_eta_" ;}
+    output_filename << rapmin << "_" << rapmax ;
+    output_filename << ".dat";
+    mFile.open(output_filename.str().c_str(), std::ios::out );
+
+    mFile << "#rho([pt](pi+),[pt](p))    error  " << std::endl ;
+    mFile << sumx << "  " << sqrt( sumx2 - sumx * sumx ) << std::endl ; 
+    mFile.close();
+  
+}
+
+void observables::calculate_ebe_meanpt_correlation_hpm_proton(std::vector<int> event_ID_ens, 
+     double&  pearson){
+  // calculate the observable for one ensemble //
+  double sumxy = 0. ; 
+  double sumx  = 0. ; 
+  double sumx2 = 0. ; 
+  double sumy  = 0. ; 
+  double sumy2 = 0. ;
+      
+  for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
+    int eventID = event_ID_ens[ii] ; 
+    event* ev = rmof->get_event(eventID) ; 
+    double ptHpm = ev->get_mean_pt(0);
+    double ptProt = ev->get_mean_pt(2212);
+    sumx  += ptHpm ; 
+    sumx2 += ptHpm * ptHpm ; 
+    sumy  += ptProt ; 
+    sumy2 += ptProt * ptProt ; 
+    sumxy += ptHpm * ptProt ; 
+  }
+  
+  sumx /= event_ID_ens.size() ; 
+  sumx2 /= event_ID_ens.size() ;
+  sumy /= event_ID_ens.size() ; 
+  sumy2 /= event_ID_ens.size() ;
+  sumxy /= event_ID_ens.size() ; 
+
+  pearson =  (sumxy - sumx * sumy) / ( sqrt(sumx2 - sumx * sumx) * sqrt(sumy2 - sumy * sumy) ) ; 
+}
+
 
 void observables::output_meanpt_vnsq_correlation_charged_hadrons(int n){
 
@@ -973,7 +1125,7 @@ void observables::output_meanpt_vnsq_higher_moments_charged_hadrons(int n){
 
   // write to file
   output_filename.str("");
-  output_filename << "results/Meanpt_v" << n << "sq_higher_moments";
+  output_filename << "results/Meanpt_v" << n << "sq_higher_moments_hpm";
   output_filename << "_pt_";
   output_filename << ptmin << "_" << ptmax ;
   if(yflag==1){
@@ -1134,7 +1286,7 @@ void observables::calculate_meanpt_vnsq_higher_moments_charged_hadrons(int n, st
 
 
 
-void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_hadrons(int n){
+void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n, int PID){
 
  // create an ensemble
  std::vector<int> event_ID_ens;
@@ -1167,7 +1319,7 @@ void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_
  for(int ii=0; ii<rmof->get_total_events(); ii++){
     event_ID_ens = get_an_event_ensemble();
     // calculate correlation of a given ensemble
-    calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_hadrons(n,event_ID_ens, c11, r11, c21, r21, c31, r31, c41, r41, c122, r122);
+    calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(n,PID,event_ID_ens, c11, r11, c21, r21, c31, r31, c41, r41, c122, r122);
     sumA  += c11 ; 
     sumAsq += pow(c11,2); 
     sumB  += c21 ; 
@@ -1200,7 +1352,11 @@ void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_
 
   // write to file
   output_filename.str("");
-  output_filename << "results/Meanpt_v" << n << "sq_higher_moments_mult_fluc_corrected";
+  if(PID==0)
+   output_filename << "results/Meanpt_v" << n << "sq_higher_moments_mult_fluc_corrected_hpm";
+  else
+   output_filename << "results/Meanpt_v" << n << "sq_higher_moments_mult_fluc_corrected_"<<PID;
+   
   output_filename << "_pt_";
   output_filename << ptmin << "_" << ptmax ;
   if(yflag==1){
@@ -1262,7 +1418,7 @@ void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_
 }
 
 
-void observables::calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_hadrons(int n, std::vector<int> event_ID_ens, 
+void observables::calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n, int PID, std::vector<int> event_ID_ens, 
     double& Cov11, double& rho11, double& Cov21, double& rho21, 
     double& Cov31, double& rho31, double& Cov41, double& rho41, 
     double& Cov122, double& rho122 ){
@@ -1286,8 +1442,8 @@ void observables::calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected_charg
     int eventID = event_ID_ens[ii] ; 
     event* ev = rmof->get_event(eventID) ; 
     nch = ev->get_integrated_vn(0,0,0);
-    spt = ev->get_mean_pt(0);
-    vnvnstar = pow(ev->get_integrated_vn(0,n,0),2) + pow(ev->get_integrated_vn(0,n,1),2) ;  
+    spt = ev->get_mean_pt(PID);
+    vnvnstar = pow(ev->get_integrated_vn(PID,n,0),2) + pow(ev->get_integrated_vn(PID,n,1),2) ;  
     sumpt += spt ; 
     sumvnvnstar += vnvnstar ;  
     sumnch += nch ; 
@@ -1314,8 +1470,8 @@ void observables::calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected_charg
     int eventID = event_ID_ens[ii] ; 
     event* ev = rmof->get_event(eventID) ; 
     nch = ev->get_integrated_vn(0,0,0);
-    spt = ev->get_mean_pt(0);
-    vnvnstar = pow(ev->get_integrated_vn(0,n,0),2) + pow(ev->get_integrated_vn(0,n,1),2) ; 
+    spt = ev->get_mean_pt(PID);
+    vnvnstar = pow(ev->get_integrated_vn(PID,n,0),2) + pow(ev->get_integrated_vn(PID,n,1),2) ; 
     // deltapt 
     deltapt = (spt - avg_mpt) ;
     // delta vn^2  
@@ -1352,9 +1508,9 @@ void observables::calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected_charg
   for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
     int eventID = event_ID_ens[ii] ; 
     event* ev = rmof->get_event(eventID) ; 
-    spt = ev->get_mean_pt(0);
+    spt = ev->get_mean_pt(PID);
     nch = ev->get_integrated_vn(0,0,0);
-    vnvnstar = pow(ev->get_integrated_vn(0,n,0),2) + pow(ev->get_integrated_vn(0,n,1),2) ; 
+    vnvnstar = pow(ev->get_integrated_vn(PID,n,0),2) + pow(ev->get_integrated_vn(PID,n,1),2) ; 
     deltapt_tilde =  (spt-avg_mpt) - cov_deltapt_nch / variance_nch * ( nch - avg_nch ) ; 
     delta_vnsq_tilde =  (vnvnstar-avg_vnsq) - cov_deltavnsq_nch / variance_nch * ( nch - avg_nch ) ; 
     sum_dvn2sq += pow(delta_vnsq_tilde,2.);
@@ -1412,7 +1568,7 @@ void observables::calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected_charg
 
 
 // The observable : Eq(7) of https://arxiv.org/pdf/2506.04029
-void observables::output_Bozek_rn_pion_proton(int n){
+void observables::output_Bozek_rn(int n, int PID1, int PID2){
 
  // create an ensemble
  std::vector<int> event_ID_ens;
@@ -1426,7 +1582,7 @@ void observables::output_Bozek_rn_pion_proton(int n){
  for(int ii=0; ii<rmof->get_total_events(); ii++){
     event_ID_ens = get_an_event_ensemble();
     // calculate correlation of a given ensemble
-    calculate_Bozek_rn_pion_proton(n,event_ID_ens, rn);
+    calculate_Bozek_rn(n,PID1, PID2,event_ID_ens, rn);
 
     sumC  += rn ; 
     sumC2 += rn * rn ; 
@@ -1441,7 +1597,16 @@ void observables::output_Bozek_rn_pion_proton(int n){
   double Erro_rn = sqrt( sumC2 / rmof->get_total_events() - pow(Mean_rn,2) ) ; 
   // write to file
   output_filename.str("");
-  output_filename << "results/Bozek_r" << n << "_pion_proton";
+  output_filename << "results/Bozek_r" << n << "_" ;
+  if(PID1==0)
+     output_filename << "hpm_" ;
+  else
+    output_filename << PID1 << "_" ; 
+  if(PID2==0)
+     output_filename << "hpm" ;
+  else
+    output_filename << PID2 ; 
+    
   output_filename << "_pt_";
   output_filename << ptmin << "_" << ptmax ;
   if(yflag==1){
@@ -1453,18 +1618,20 @@ void observables::output_Bozek_rn_pion_proton(int n){
   output_filename << rapmin << "_" << rapmax ;
   output_filename << ".dat";
   mFile.open(output_filename.str().c_str(), std::ios::out );
-  mFile << "#rn_meson_baryon   error " << std::endl ;
+  mFile << "#rn_hpm_proton   error " << std::endl ;
   mFile << Mean_rn << "   " << Erro_rn <<  std::endl ; 
   mFile.close();
 }
 
 
-void observables::calculate_Bozek_rn_pion_proton(int n, std::vector<int> event_ID_ens, 
+
+
+void observables::calculate_Bozek_rn(int n, int PID1, int PID2, std::vector<int> event_ID_ens, 
       double& rn){
   // calculate the observable for one ensemble //
-  double sum_vn_211_vn_2212_star  = 0. ; 
-  double sum_vn_211_vn_211_star   = 0. ; 
-  double sum_vn_2212_vn_2212_star = 0. ; 
+  double sum_vn_PID1_vn_PID2_star  = 0. ; 
+  double sum_vn_PID1_vn_PID1_star   = 0. ; 
+  double sum_vn_PID2_vn_PID2_star = 0. ; 
    
   double temp_vnvnstar;
    
@@ -1472,29 +1639,26 @@ void observables::calculate_Bozek_rn_pion_proton(int n, std::vector<int> event_I
     int eventID = event_ID_ens[ii] ; 
     event* ev = rmof->get_event(eventID) ; 
 
-    temp_vnvnstar = ev->get_integrated_vn(211,n,0) * ev->get_integrated_vn(2212,n,0) 
-      + ev->get_integrated_vn(211,n,1) * ev->get_integrated_vn(2212,n,1) ;  
-    sum_vn_211_vn_2212_star += temp_vnvnstar ;  
+    temp_vnvnstar = ev->get_integrated_vn(PID1,n,0) * ev->get_integrated_vn(PID2,n,0) 
+      + ev->get_integrated_vn(PID1,n,1) * ev->get_integrated_vn(PID2,n,1) ;  
+    sum_vn_PID1_vn_PID2_star += temp_vnvnstar ;  
 
-    temp_vnvnstar = ev->get_integrated_vn(211,n,0) * ev->get_integrated_vn(211,n,0) 
-      + ev->get_integrated_vn(211,n,1) * ev->get_integrated_vn(211,n,1) ;  
-    sum_vn_211_vn_211_star += temp_vnvnstar ;  
+    temp_vnvnstar = ev->get_integrated_vn(PID1,n,0) * ev->get_integrated_vn(PID1,n,0) 
+      + ev->get_integrated_vn(PID1,n,1) * ev->get_integrated_vn(PID1,n,1) ;  
+    sum_vn_PID1_vn_PID1_star += temp_vnvnstar ;  
 
-    temp_vnvnstar = ev->get_integrated_vn(2212,n,0) * ev->get_integrated_vn(2212,n,0) 
-      + ev->get_integrated_vn(2212,n,1) * ev->get_integrated_vn(2212,n,1) ;  
-    sum_vn_2212_vn_2212_star += temp_vnvnstar ;  
+    temp_vnvnstar = ev->get_integrated_vn(PID2,n,0) * ev->get_integrated_vn(PID2,n,0) 
+      + ev->get_integrated_vn(PID2,n,1) * ev->get_integrated_vn(PID2,n,1) ;  
+    sum_vn_PID2_vn_PID2_star += temp_vnvnstar ;  
 
 
   }
   
-  sum_vn_211_vn_2212_star /= event_ID_ens.size() ; 
-  sum_vn_211_vn_211_star /= event_ID_ens.size() ; 
-  sum_vn_2212_vn_2212_star /= event_ID_ens.size() ; 
+  sum_vn_PID1_vn_PID2_star /= event_ID_ens.size() ; 
+  sum_vn_PID1_vn_PID1_star /= event_ID_ens.size() ; 
+  sum_vn_PID2_vn_PID2_star /= event_ID_ens.size() ; 
 
-  rn = sum_vn_211_vn_2212_star / sqrt(sum_vn_211_vn_211_star*sum_vn_2212_vn_2212_star) ;                
+  rn = sum_vn_PID1_vn_PID2_star / sqrt(sum_vn_PID1_vn_PID1_star*sum_vn_PID2_vn_PID2_star) ;                
 }
-
-
-
 
 

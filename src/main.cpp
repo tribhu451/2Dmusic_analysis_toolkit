@@ -14,10 +14,10 @@ int main(int argc,char** argv)
     double rapmin=-0.5;
     double rapmax= 0.5;
 
-    double ptmin=0.01;
+    double ptmin=0.2;
     double ptmax=3.0;
 
-    int max_Nevents=9999;
+    int max_Nevents=999;
 
     if(argc<2){
         std::cout<<"Need at least one path\n";
@@ -41,13 +41,16 @@ int main(int argc,char** argv)
     // species
     rmof->compute_integrated_vn_all(ptmin,ptmax);
     rmof->compute_meanpt_all(ptmin,ptmax);
-
+    //rmof-> initial(paths);
+     
     observables* obj =
         new observables(rmof,yflag,
                         rapmin,rapmax,
                         ptmin,ptmax);
 
     obj->output_dndy_or_dndeta();
+    obj->output_meanpt_and_sigma_pt();
+    obj->output_ebe_meanpt_correlation_hpm_proton();
     /*
     obj->output_meanpt_vnsq_correlation_charged_hadrons(2);
     obj->output_meanpt_vnsq_correlation_charged_hadrons(3);
@@ -66,13 +69,17 @@ int main(int argc,char** argv)
     
     obj-> output_meanpt_vnsq_higher_moments_charged_hadrons(2);
     obj-> output_meanpt_vnsq_higher_moments_charged_hadrons(3);
-    
-    obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_hadrons(2);
-    obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected_charged_hadrons(3);
     */
-    obj-> output_Bozek_rn_pion_proton(2);
-    obj-> output_Bozek_rn_pion_proton(3);
+    obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(2,0);  // harmonics, PID
+    obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(3,0);
     
+    obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(2,2212);
+    obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(3,2212);
+
+    obj-> output_Bozek_rn(2, 0, 2212); // harmonics, PID1, PID2
+    obj-> output_Bozek_rn(3, 0, 2212);
+
+
     return 0;
 }
 

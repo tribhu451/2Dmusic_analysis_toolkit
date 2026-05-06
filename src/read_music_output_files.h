@@ -49,6 +49,8 @@ public:
     inline int get_Nptbins() const noexcept { return music_pt_bins; }
     inline double get_pt_val_of_bin(int ii){return ptval[ii];}
 
+    void initial( const std::vector<std::string>& paths);
+    
 private:
 
     std::vector<std::string> music_output_paths;
