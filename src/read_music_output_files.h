@@ -23,6 +23,12 @@ class read_music_output_files{
     double get_pt_val_of_bin(int ii){return ptval[ii];}
     
   private :
+    double compute_total_entropy(const std::string& filepath);
+    double mult_min;
+    double mult_max;
+    int output_index_width;
+    int N_RUN_FOLDS ;
+    int MAX_NEVETS_READ;
     std::istringstream* iss;
     char buff[400];
     std::vector<std::string> music_output_paths ; 

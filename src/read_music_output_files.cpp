@@ -4,18 +4,32 @@
 read_music_output_files::read_music_output_files(std::vector<std::string>  aa_music_output_paths, 
 int apid, int ayflag, double arapmin, double arapmax, double aptmin, double aptmax): pid(apid), yflag(ayflag), rapmin(arapmin), rapmax(arapmax), ptmin(aptmin), ptmax(aptmax){
   music_output_paths = aa_music_output_paths ;
-     
+
+  output_index_width = 3 ;  
+  MAX_NEVETS_READ = 998 ;
+  N_RUN_FOLDS = 100 ;
+  
+  mult_min = 0.0000 ;  
+  mult_max = 1000.0 ; 
+
   // now set how many events do you have
   // and also set Number of ptbins ans pt-values ?
   std::ifstream file;
   int temp_total_music_events = 0 ;
   int temp_pt_bins=0 ; 
   for(long unsigned int output_path_index=0; output_path_index < music_output_paths.size() ; output_path_index++ ){
-    for(int ioutputIDX=0; ioutputIDX < 9999 ; ioutputIDX++ ){ // maximum 10,000 outputs/events in a path should be there
+   for(int irunfold=0; irunfold < N_RUN_FOLDS ; irunfold++ ){ 
+    for(int ioutputIDX=0; ioutputIDX < MAX_NEVETS_READ ; ioutputIDX++ ){ 
       std::stringstream input_filename;
       input_filename.str(std::string());
       input_filename << music_output_paths[output_path_index].c_str() ;
-      input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX;
+      input_filename << "/RUN" << irunfold ;
+      input_filename << "/outputs_" << std::setfill('0') << std::setw(output_index_width) << ioutputIDX;
+      
+      // select events within a centrality window
+      //double total_init_mult = compute_total_entropy(input_filename.str());
+      //if (total_init_mult < mult_min || total_init_mult > mult_max) continue;
+      
       if(pid==0){
         input_filename << "/vnchpT";
       }
@@ -36,6 +50,7 @@ int apid, int ayflag, double arapmin, double arapmax, double aptmin, double aptm
         continue ; 
       }
       else{
+	std::cout << "reading file : (" <<temp_total_music_events << ")  >>>  " << input_filename.str().c_str() << "    ... " << std::endl ;
         temp_total_music_events ++ ; 
         if(temp_total_music_events==1){
           file.getline(buff,450) ; // header
@@ -54,6 +69,7 @@ int apid, int ayflag, double arapmin, double arapmax, double aptmin, double aptm
         file.close();
       }
     }
+   } // irun fold
   }
   total_music_events = temp_total_music_events ; 
   music_pt_bins = temp_pt_bins ; 
@@ -75,15 +91,24 @@ int apid, int ayflag, double arapmin, double arapmax, double aptmin, double aptm
 
 
 void read_music_output_files::read_pt_integrated_stuff(){
+
   std::ifstream file;
   int temp_total_music_events = 0 ;
   double Nch, v1cos, v1sin, v2cos, v2sin, v3cos, v3sin, v4cos, v4sin, dummy ; 
   for(long unsigned int output_path_index=0; output_path_index < music_output_paths.size() ; output_path_index++ ){
-    for(int ioutputIDX=0; ioutputIDX < 9999 ; ioutputIDX++ ){ // maximum 10,000 outputs/events in a path should be there
+   for(int irunfold=0; irunfold < N_RUN_FOLDS ; irunfold++ ){
+     for(int ioutputIDX=0; ioutputIDX < MAX_NEVETS_READ ; ioutputIDX++ ){ 
       std::stringstream input_filename;
       input_filename.str(std::string());
       input_filename << music_output_paths[output_path_index].c_str() ;
-      input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX; 
+      input_filename << "/RUN" << irunfold ;
+      input_filename << "/outputs_" << std::setfill('0') << std::setw(output_index_width) << ioutputIDX; 
+      
+      // select events within a centrality window
+      //double total_init_mult = compute_total_entropy(input_filename.str());
+      //if (total_init_mult < mult_min || total_init_mult > mult_max) continue;
+
+      
       if(pid==0){
         input_filename << "/vnch_pT_";
       }
@@ -120,6 +145,7 @@ void read_music_output_files::read_pt_integrated_stuff(){
         temp_total_music_events ++ ; 
       }
     } // iouputIdx
+   } // irun
   } // loop over paths
   
   if(temp_total_music_events == 0){
@@ -141,11 +167,19 @@ void read_music_output_files::read_meanpt(){
   int temp_total_music_events = 0 ;
   double mpt ; 
   for(long unsigned int output_path_index=0; output_path_index < music_output_paths.size() ; output_path_index++ ){
-    for(int ioutputIDX=0; ioutputIDX < 9999 ; ioutputIDX++ ){ // maximum 10,000 outputs/events in a path should be there
+   for(int irunfold=0; irunfold < N_RUN_FOLDS ; irunfold++ ){
+    for(int ioutputIDX=0; ioutputIDX < MAX_NEVETS_READ ; ioutputIDX++ ){ 
       std::stringstream input_filename;
       input_filename.str(std::string());
       input_filename << music_output_paths[output_path_index].c_str() ;
-      input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX; 
+      input_filename << "/RUN" << irunfold ;
+      input_filename << "/outputs_" << std::setfill('0') << std::setw(output_index_width) << ioutputIDX; 
+      
+      // select events within a centrality window
+      //double total_init_mult = compute_total_entropy(input_filename.str());
+      //if (total_init_mult < mult_min || total_init_mult > mult_max) continue;
+
+      
       if(pid==0){
         input_filename << "/mean_pt_ch_pt_";
       }
@@ -173,6 +207,7 @@ void read_music_output_files::read_meanpt(){
         temp_total_music_events ++ ; 
       }
     } // iouputIdx
+   } // irun 
   } // loop over paths
   
     if(temp_total_music_events == 0){
@@ -193,11 +228,19 @@ void read_music_output_files::read_pt_differential_stuff(){
   int temp_total_music_events = 0 ;
   double ptv, dnptdptdy, v1cos, v1sin, v2cos, v2sin, v3cos, v3sin, v4cos, v4sin, dummy ; 
   for(long unsigned int output_path_index=0; output_path_index < music_output_paths.size() ; output_path_index++ ){
-    for(int ioutputIDX=0; ioutputIDX < 9999 ; ioutputIDX++ ){ // maximum 10,000 outputs/events in a path should be there
+   for(int irunfold=0; irunfold < N_RUN_FOLDS ; irunfold++ ){
+    for(int ioutputIDX=0; ioutputIDX < MAX_NEVETS_READ ; ioutputIDX++ ){ 
       std::stringstream input_filename;
       input_filename.str(std::string());
       input_filename << music_output_paths[output_path_index].c_str() ;
-      input_filename << "/outputs_" << std::setfill('0') << std::setw(4) << ioutputIDX; 
+      input_filename << "/RUN" << irunfold ;
+      input_filename << "/outputs_" << std::setfill('0') << std::setw(output_index_width) << ioutputIDX; 
+      
+      // select events within a centrality window
+      //double total_init_mult = compute_total_entropy(input_filename.str());
+      //if (total_init_mult < mult_min || total_init_mult > mult_max) continue;
+
+      
       if(pid==0){
         input_filename << "/vnchpT";
       }
@@ -246,6 +289,7 @@ void read_music_output_files::read_pt_differential_stuff(){
         temp_total_music_events ++ ; 
       }
     } // iouputIdx
+   } // irun
   } // loop over paths
   
   if(temp_total_music_events == 0){
@@ -259,5 +303,57 @@ void read_music_output_files::read_pt_differential_stuff(){
 }
 
 
+
+double read_music_output_files::compute_total_entropy(
+        const std::string& base_path) {
+
+    // --- Construct full file path ---
+    std::stringstream filepath;
+    filepath << base_path
+             << "/input_profile.init";
+
+    std::ifstream file(filepath.str().c_str(), std::ios::in);
+    if (!file) {
+        return -1.0;  // file does not exist
+    }
+
+    char buff[500];
+    std::istringstream iss;
+
+    int Nx, Ny;
+    double dx, dy;
+    std::string dummy_str;
+
+    // --- Read header ---
+    file.getline(buff, 500);
+    iss.clear();
+    iss.str(buff);
+
+    iss >> dummy_str >> dummy_str >> dummy_str >> dummy_str >> dummy_str
+        >> dummy_str >> Nx >> dummy_str >> Ny >> dummy_str >> dummy_str
+        >> dummy_str >> dx >> dummy_str >> dy;
+
+    // --- Loop over grid ---
+    double xgrid, ygrid, ss;
+    double total_S = 0.0;
+    double dummy;
+
+    for (int ix = 0; ix < Nx; ix++) {
+        for (int iy = 0; iy < Ny; iy++) {
+
+            file.getline(buff, 500);
+            iss.clear();
+            iss.str(buff);
+
+            iss >> dummy >> xgrid >> ygrid >> ss >> dummy_str;
+
+            total_S += ss * dx * dy;
+        }
+    }
+
+    file.close();
+
+    return total_S;
+}
 
 

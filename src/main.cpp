@@ -54,25 +54,36 @@ int main(int argc, char **argv){
  
  read_music_output_files* rmof = new read_music_output_files(music_output_paths, pid, yflag,  rapmin,  rapmax,  ptmin,  ptmax); 
  rmof->read_pt_differential_stuff();
+ std::cout << "reading pt differential stuff done ... " << std::endl ; 
  rmof->read_pt_integrated_stuff();
+ std::cout << "reading pt integrated stuff done ... " << std::endl ; 
  rmof->read_meanpt();
- 
+ std::cout << "reading meanpt done ... " << std::endl ; 
+
  observables* obj = new observables(rmof, pid, yflag,  rapmin,  rapmax,  ptmin,  ptmax);
- //obj->output_meanpt_vnsq_correlation(2);
+ obj->output_meanpt_vnsq_correlation(2);
  //obj->output_meanpt_vnsq_correlation(3);
  //obj->output_pt_diff_meanpt_vnvnpt_correlation(2);
  //obj->output_pt_diff_meanpt_vnvnpt_correlation(3);
  //obj->output_pt_diff_meanpt_vnptvnpt_correlation(2);
  //obj->output_pt_diff_meanpt_vnptvnpt_correlation(3);
- //obj-> output_pt_diff_multiparticle_vn(2);
- //obj-> output_pt_diff_multiparticle_vn(3);
- //obj-> output_pt_diff_multiparticle_vn_method2(2);
- //obj-> output_pt_diff_multiparticle_vn_method2(3);
+
+ 
  obj-> output_meanpt_vnsq_higher_moments(2);
  obj-> output_meanpt_vnsq_higher_moments(3);
  obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(2);
  obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(3);
+ obj-> output_v0_vn_in_both_w_and_wo_mult_fluc_correction(2);
+ obj-> output_v0_vn_in_both_w_and_wo_mult_fluc_correction(3);
+ obj-> output_relation_23(2);
+ //obj-> output_relation_23(3);
 
+ 
+ //obj-> output_pt_diff_multiparticle_vn_method2(2);
+ //obj-> output_pt_diff_multiparticle_vn_method2(3);
+ //obj-> output_pt_diff_multiparticle_vn(2);
+ //obj-> output_pt_diff_multiparticle_vn(3);
+ 
  return 0 ;  
 }
 
