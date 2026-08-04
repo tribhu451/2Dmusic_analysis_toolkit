@@ -49,37 +49,22 @@ int main(int argc,char** argv)
                         ptmin,ptmax);
 
     obj->output_dndy_or_dndeta();
-    obj->output_meanpt_and_sigma_pt();
+    
+    
+    obj->output_vo_ratio_proton_hpm();
     obj->output_ebe_meanpt_correlation_hpm_proton();
+    obj-> output_Bozek_rn(2, 0, 2212); // harmonics, PID1, PID2
+    obj-> output_Bozek_rn(3, 0, 2212);
+    obj-> output_vn_meanpt_correlation_ratio_proton_charged_hadron(2);
+    obj-> output_vn_meanpt_correlation_ratio_proton_charged_hadron(3);
+
     /*
-    obj->output_meanpt_vnsq_correlation_charged_hadrons(2);
-    obj->output_meanpt_vnsq_correlation_charged_hadrons(3);
-
-    obj->output_pt_diff_meanpt_vnvnpt_correlation_charged_hadrons(2);
-    obj->output_pt_diff_meanpt_vnvnpt_correlation_charged_hadrons(3);
-
-    obj->output_pt_diff_meanpt_vnptvnpt_correlation_charged_hadrons(2);
-    obj->output_pt_diff_meanpt_vnptvnpt_correlation_charged_hadrons(3);
-
     obj->output_pt_diff_multiparticle_vn_charged_hadrons(2);
     obj->output_pt_diff_multiparticle_vn_charged_hadrons(3);
 
     obj->output_pt_diff_multiparticle_vn_method2_charged_hadrons(2);
     obj->output_pt_diff_multiparticle_vn_method2_charged_hadrons(3);
-    
-    obj-> output_meanpt_vnsq_higher_moments_charged_hadrons(2);
-    obj-> output_meanpt_vnsq_higher_moments_charged_hadrons(3);
     */
-    obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(2,0);  // harmonics, PID
-    obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(3,0);
-    
-    obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(2,2212);
-    obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(3,2212);
-
-    obj-> output_Bozek_rn(2, 0, 2212); // harmonics, PID1, PID2
-    obj-> output_Bozek_rn(3, 0, 2212);
-
-
     return 0;
 }
 

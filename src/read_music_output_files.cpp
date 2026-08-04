@@ -24,7 +24,7 @@ read_music_output_files::read_music_output_files(
   ptmin(aptmin),
   ptmax(aptmax)
 {
-    int max_Nrun = 100;
+    int max_Nrun = 99;
 
     std::ifstream file;
     std::string line;
