@@ -69,20 +69,19 @@ int main(int argc, char **argv){
  //obj->output_pt_diff_meanpt_vnptvnpt_correlation(3);
 
  
- obj-> output_meanpt_vnsq_higher_moments(2);
- obj-> output_meanpt_vnsq_higher_moments(3);
  obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(2);
  obj-> output_meanpt_vnsq_higher_moments_mult_fluc_corrected(3);
  obj-> output_v0_vn_in_both_w_and_wo_mult_fluc_correction(2);
  obj-> output_v0_vn_in_both_w_and_wo_mult_fluc_correction(3);
- obj-> output_relation_23(2);
- //obj-> output_relation_23(3);
-
+ obj-> output_moments_vn(2);
+ obj-> output_moments_vn(3);
+ obj-> output_relation(2);
+ obj-> output_relation(3);
  
- //obj-> output_pt_diff_multiparticle_vn_method2(2);
- //obj-> output_pt_diff_multiparticle_vn_method2(3);
- //obj-> output_pt_diff_multiparticle_vn(2);
- //obj-> output_pt_diff_multiparticle_vn(3);
+ obj-> output_pt_diff_multiparticle_vn_method2(2);
+ obj-> output_pt_diff_multiparticle_vn_method2(3);
+ obj-> output_pt_diff_multiparticle_vn(2);
+ obj-> output_pt_diff_multiparticle_vn(3);
  
  return 0 ;  
 }

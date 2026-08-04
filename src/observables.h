@@ -17,11 +17,11 @@ class observables{
     void output_pt_diff_meanpt_vnptvnpt_correlation(int n);
     void output_pt_diff_multiparticle_vn(int n);
     void output_pt_diff_multiparticle_vn_method2(int n);
-    void output_meanpt_vnsq_higher_moments(int n);
     void output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n);
     void output_v0_vn_in_both_w_and_wo_mult_fluc_correction(int n);
-    void output_relation_23(int n);
-    
+    void output_relation(int n);
+    void output_moments_vn(int n);   
+     
   private :
     std::vector<event*> event_arena;
     read_music_output_files* rmof ; 
@@ -40,19 +40,15 @@ class observables{
       std::vector<double>& vn_2, std::vector<double>& vn_4);
     void calculate_pt_diff_multiparticle_vn_method2(int n, std::vector<int> event_ID_ens, 
       double& vn_sq, double& vn_fr, std::vector<double>& vn_2_num, std::vector<double>& vn_4_num );
-    void calculate_meanpt_vnsq_higher_moments(int n, std::vector<int> event_ID_ens, 
-      double& Cov11, double& rho11, double& Cov21, double& rho21, 
-      double& Cov31, double& rho31, double& Cov41, double& rho41, 
-      double& Cov122, double& rho122 );
     void calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n, std::vector<int> event_ID_ens, 
       double& Cov11, double& rho11, double& Cov21, double& rho21, 
       double& Cov31, double& rho31, double& Cov41, double& rho41, 
-      double& Cov122, double& rho122 );
+      double& Cov12, double& rho12, double& Cov13, double& rho13 );
     void calculate_v0_vn_in_both_w_and_wo_mult_fluc_correction(int n, std::vector<int> event_ID_ens, 
     double& Mpt_wo, double& Sigmapt_wo, double& v0_wo, double& Mpt_w, double& Sigmapt_w, double& v0_w,
     double& Mvnsq_wo, double& Sigmavnsq_wo, double& ttvn_wo, double& Mvnsq_w, double& Sigmavnsq_w, double& ttvn_w );
-    void calculate_relation_23(int n, std::vector<int> event_ID_ens, double& rho11, double& rho122, double& r23 );
-
+    void calculate_relation(int n, std::vector<int> event_ID_ens, double& , double&  );
+    void calculate_moments_vn(int n, std::vector<int> event_ID_ens, double& , double&, double&  );
 
     // kinematics cut     
     int pid ; int yflag ; double rapmin ; 

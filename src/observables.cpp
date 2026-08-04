@@ -851,234 +851,6 @@ void observables::calculate_pt_diff_multiparticle_vn_method2(int n, std::vector<
 
 
 
-
-void observables::output_meanpt_vnsq_higher_moments(int n){
-
- // create an ensemble
- std::vector<int> event_ID_ens;
- 
- double sumA = 0 ; 
- double sumAsq = 0 ; 
- double sumB = 0 ; 
- double sumBsq = 0 ; 
- double sumC = 0 ; 
- double sumCsq = 0 ; 
- double sumD = 0 ; 
- double sumDsq = 0 ; 
- double sumE = 0 ; 
- double sumEsq = 0 ; 
-
- double sumU = 0 ; 
- double sumUsq = 0 ; 
- double sumV = 0 ; 
- double sumVsq = 0 ; 
- double sumW = 0 ; 
- double sumWsq = 0 ; 
- double sumX = 0 ; 
- double sumXsq = 0 ; 
- double sumY = 0 ; 
- double sumYsq = 0 ; 
-
- double c11, c21, c31, c41, c122;
- double r11, r21, r31, r41, r122;
- 
- for(int ii=0; ii<rmof->get_total_music_events(); ii++){
-    event_ID_ens = get_an_event_ensemble();
-    // calculate correlation of a given ensemble
-    calculate_meanpt_vnsq_higher_moments(n,event_ID_ens, c11, r11, c21, r21, c31, r31, c41, r41, c122, r122);
-    sumA  += c11 ; 
-    sumAsq += pow(c11,2); 
-    sumB  += c21 ; 
-    sumBsq += pow(c21,2); 
-    sumC  += c31 ; 
-    sumCsq += pow(c31,2); 
-    sumD  += c41 ; 
-    sumDsq += pow(c41,2); 
-    sumE  += c122 ; 
-    sumEsq += pow(c122,2); 
-    
-    sumU  += r11 ; 
-    sumUsq += pow(r11,2); 
-    sumV  += r21 ; 
-    sumVsq += pow(r21,2); 
-    sumW  += r31 ; 
-    sumWsq += pow(r31,2); 
-    sumX  += r41 ; 
-    sumXsq += pow(r41,2); 
-    sumY  += r122 ; 
-    sumYsq += pow(r122,2); 
- }
- 
-  
-  std::ofstream mFile;
-  std::stringstream output_filename;
-
-  double val;
-  double err;
-
-  // write to file
-  output_filename.str("");
-  output_filename << "results/Meanpt_v" << n << "sq_higher_moments";
-  output_filename << "_pt_";
-  output_filename << ptmin << "_" << ptmax ;
-  if(yflag==1){
-   output_filename << "_y_" ;
-  }
-  else{
-   output_filename << "_eta_" ;
-  }
-  output_filename << rapmin << "_" << rapmax ;
-  output_filename << ".dat";
-  mFile.open(output_filename.str().c_str(), std::ios::out );
-  mFile << "#Cov(1,1)   error   Cov(2,1)   error   Cov(3,1)   error    Cov(4,1)   error  Cov(1,2,2)   error " 
-  << "  rho(1,1)    error    rho(2,1)    error   rho(3,1)    error  rho(4,1)  error   rho(1,2,2)   error  " 
-  << std::endl ;
-
-  val = sumA / rmof->get_total_music_events() ; 
-  err = sqrt( sumAsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err << "  "; 
-  
-  val = sumB / rmof->get_total_music_events() ; 
-  err = sqrt( sumBsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err << "  " ; 
-
-  val = sumC / rmof->get_total_music_events() ; 
-  err = sqrt( sumCsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err << "  " ; 
-
-  val = sumD / rmof->get_total_music_events() ; 
-  err = sqrt( sumDsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err << "  " ; 
-
-  val = sumE / rmof->get_total_music_events() ; 
-  err = sqrt( sumEsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err << "  " ; 
- 
-  val = sumU / rmof->get_total_music_events() ; 
-  err = sqrt( sumUsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err << "  " ; 
-  
-  val = sumV / rmof->get_total_music_events() ; 
-  err = sqrt( sumVsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err << "  " ; 
-
-  val = sumW / rmof->get_total_music_events() ; 
-  err = sqrt( sumWsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err << "  " ; 
-
-  val = sumX / rmof->get_total_music_events() ; 
-  err = sqrt( sumXsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err << "  " ; 
-
-  val = sumY / rmof->get_total_music_events() ; 
-  err = sqrt( sumYsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err << "  " ; 
-   
-  mFile << std::endl ; 
-  mFile.close();
-  
-}
-
-
-
-void observables::calculate_meanpt_vnsq_higher_moments(int n, std::vector<int> event_ID_ens, 
-    double& Cov11, double& rho11, double& Cov21, double& rho21, 
-    double& Cov31, double& rho31, double& Cov41, double& rho41, 
-    double& Cov122, double& rho122 ){
-
-  // calculate the observable for one ensemble //
-  double sumpt = 0. ; 
-  double sumptsq = 0. ; 
-  double sumvnvnstar = 0. ; 
-  double sumvnvnstarsq = 0. ; 
-
-  for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
-    int eventID = event_ID_ens[ii] ; 
-    event* ev = rmof->get_event(eventID) ; 
-    double pt = ev->get_mean_pt();
-    double vnvnstar = pow(ev->get_integrated_vn(n,0),2) + pow(ev->get_integrated_vn(n,1),2) ;  
-    sumpt += pt ; 
-    sumptsq += pow(pt,2);
-    sumvnvnstar += vnvnstar ;  
-    sumvnvnstarsq += pow(vnvnstar,2) ; 
-  }
-  
-  sumpt /= event_ID_ens.size() ; 
-  sumptsq /= event_ID_ens.size() ; 
-  sumvnvnstar /= event_ID_ens.size() ; 
-  sumvnvnstarsq /= event_ID_ens.size() ; 
-
-  double avg_mpt  = sumpt ; 
-  double avg_vnsq = sumvnvnstar ; 
-  
-  double sigma_pt = sqrt( ( sumptsq - sumpt * sumpt ) ) ;
-  double sigma_vnsq = sqrt( ( sumvnvnstarsq - sumvnvnstar * sumvnvnstar )  ) ;
-  
-  double sum_dptsq=0.; 
-  double sum_dptcu=0.; 
-  double sum_dpt_dvnsq=0.; 
-  double sum_dptsq_dvnsq=0.; 
-  double sum_dptcu_dvnsq=0.; 
-  double sum_dpt4_dvnsq=0.; 
-  double sum_dpt_dvnsq_dvnsq=0.;
-   
-  for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
-    int eventID = event_ID_ens[ii] ; 
-    event* ev = rmof->get_event(eventID) ; 
-    double pt = ev->get_mean_pt();
-    double vnvnstar = pow(ev->get_integrated_vn(n,0),2) + pow(ev->get_integrated_vn(n,1),2) ;  
-    sum_dptsq += pow(pt-avg_mpt,2.);
-    sum_dptcu += pow(pt-avg_mpt,3.);
-    sum_dpt_dvnsq +=  (pt-avg_mpt)*(vnvnstar - avg_vnsq);
-    sum_dptsq_dvnsq +=  pow(pt-avg_mpt,2.)*(vnvnstar - avg_vnsq);
-    sum_dptcu_dvnsq +=  pow(pt-avg_mpt,3.)*(vnvnstar - avg_vnsq);
-    sum_dpt4_dvnsq  +=  pow(pt-avg_mpt,4.)*(vnvnstar - avg_vnsq);
-    sum_dpt_dvnsq_dvnsq += (pt-avg_mpt)*(vnvnstar - avg_vnsq)*(vnvnstar - avg_vnsq);
-  }
-  
-  sum_dptsq /= event_ID_ens.size() ; 
-  sum_dptcu /= event_ID_ens.size() ; 
-  sum_dpt_dvnsq /= event_ID_ens.size() ; 
-  sum_dptsq_dvnsq /= event_ID_ens.size() ; 
-  sum_dptcu_dvnsq /= event_ID_ens.size() ; 
-  sum_dpt4_dvnsq /= event_ID_ens.size() ; 
-  sum_dpt_dvnsq_dvnsq /= event_ID_ens.size() ; 
-
-  double num ; 
-  double den ;
-   
-  num = sum_dpt_dvnsq ; 
-  den = pow(sigma_pt,1) * sigma_vnsq ;
-  Cov11 = num  ; 
-  rho11 = num / den ; 
-  
-  num = sum_dptsq_dvnsq ; 
-  den = pow(sigma_pt,2) * sigma_vnsq ;
-  Cov21 = num  ; 
-  rho21 = num / den ; 
-
-  num = sum_dptcu_dvnsq - 3 * sum_dptsq * sum_dpt_dvnsq ; 
-  den = pow(sigma_pt,3) * sigma_vnsq ;
-  Cov31 = num  ; 
-  rho31 = num / den ; 
-
-  num = sum_dpt4_dvnsq - 6 * sum_dptsq *  sum_dptsq_dvnsq - 4 * sum_dptcu * sum_dpt_dvnsq ; 
-  den = pow(sigma_pt,4) * sigma_vnsq ;
-  Cov41 = num  ; 
-  rho41 = num / den ; 
-
-  num = sum_dpt_dvnsq_dvnsq - 2 * avg_vnsq * sum_dpt_dvnsq ; 
-  den = pow(sigma_pt,1) * pow(sigma_vnsq,2);
-  Cov122 = num  ; 
-  rho122 = num / den ; 
-
-}
-
-
-
-
-
-
 void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n){
 
  // create an ensemble
@@ -1094,6 +866,8 @@ void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n){
  double sumDsq = 0 ; 
  double sumE = 0 ; 
  double sumEsq = 0 ; 
+ double sumF = 0 ; 
+ double sumFsq = 0 ; 
 
  double sumU = 0 ; 
  double sumUsq = 0 ; 
@@ -1105,14 +879,16 @@ void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n){
  double sumXsq = 0 ; 
  double sumY = 0 ; 
  double sumYsq = 0 ; 
+ double sumZ = 0 ; 
+ double sumZsq = 0 ; 
 
- double c11, c21, c31, c41, c122;
- double r11, r21, r31, r41, r122;
+ double c11, c21, c31, c41, c12, c13;
+ double r11, r21, r31, r41, r12, r13;
  
  for(int ii=0; ii<rmof->get_total_music_events(); ii++){
     event_ID_ens = get_an_event_ensemble();
     // calculate correlation of a given ensemble
-    calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(n,event_ID_ens, c11, r11, c21, r21, c31, r31, c41, r41, c122, r122);
+    calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(n,event_ID_ens, c11, r11, c21, r21, c31, r31, c41, r41, c12, r12, c13, r13);
     sumA  += c11 ; 
     sumAsq += pow(c11,2); 
     sumB  += c21 ; 
@@ -1121,8 +897,10 @@ void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n){
     sumCsq += pow(c31,2); 
     sumD  += c41 ; 
     sumDsq += pow(c41,2); 
-    sumE  += c122 ; 
-    sumEsq += pow(c122,2); 
+    sumE  += c12 ; 
+    sumEsq += pow(c12,2); 
+    sumF  += c13 ; 
+    sumFsq += pow(c13,2); 
     
     sumU  += r11 ; 
     sumUsq += pow(r11,2); 
@@ -1132,8 +910,11 @@ void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n){
     sumWsq += pow(r31,2); 
     sumX  += r41 ; 
     sumXsq += pow(r41,2); 
-    sumY  += r122 ; 
-    sumYsq += pow(r122,2); 
+    sumY  += r12 ; 
+    sumYsq += pow(r12,2); 
+    sumZ  += r13 ; 
+    sumZsq += pow(r13,2); 
+
  }
  
   
@@ -1157,8 +938,8 @@ void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n){
   output_filename << rapmin << "_" << rapmax ;
   output_filename << ".dat";
   mFile.open(output_filename.str().c_str(), std::ios::out );
-  mFile << "#Cov(1,1)   error   Cov(2,1)   error   Cov(3,1)   error    Cov(4,1)   error  Cov(1,2,2)   error " 
-  << "  rho(1,1)    error    rho(2,1)    error   rho(3,1)    error  rho(4,1)  error   rho(1,2,2)   error  " 
+  mFile << "#Cov(1,1)   error   Cov(2,1)   error   Cov(3,1)   error    Cov(4,1)   error  Cov(1,2)   error  Cov(1,3)   error " 
+  << "  rho(1,1)    error    rho(2,1)    error   rho(3,1)    error  rho(4,1)  error   rho(1,2)   error  rho(1,3)   error  " 
   << std::endl ;
 
   val = sumA / rmof->get_total_music_events() ; 
@@ -1181,6 +962,12 @@ void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n){
   err = sqrt( sumEsq / rmof->get_total_music_events() - pow(val,2) ) ; 
   mFile << val << "  " << err << "  " ; 
  
+  val = sumF / rmof->get_total_music_events() ; 
+  err = sqrt( sumFsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ;  
+ 
+ 
+ 
   val = sumU / rmof->get_total_music_events() ; 
   err = sqrt( sumUsq / rmof->get_total_music_events() - pow(val,2) ) ; 
   mFile << val << "  " << err << "  " ; 
@@ -1200,7 +987,11 @@ void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n){
   val = sumY / rmof->get_total_music_events() ; 
   err = sqrt( sumYsq / rmof->get_total_music_events() - pow(val,2) ) ; 
   mFile << val << "  " << err << "  " ; 
-   
+
+  val = sumZ / rmof->get_total_music_events() ; 
+  err = sqrt( sumZsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ; 
+
   mFile << std::endl ; 
   mFile.close();
   
@@ -1210,7 +1001,7 @@ void observables::output_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n){
 void observables::calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n, std::vector<int> event_ID_ens, 
     double& Cov11, double& rho11, double& Cov21, double& rho21, 
     double& Cov31, double& rho31, double& Cov41, double& rho41, 
-    double& Cov122, double& rho122 ){
+    double& Cov12, double& rho12, double& Cov13, double& rho13 ){
 
    // frequently used variables, globally declare karagala.
    // allocation inside loop takes time.
@@ -1220,12 +1011,13 @@ void observables::calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n
    double deltapt;
    double deltavnsq;
 
-
   // first : Var(Nch), average <pt> and average <vn^2> //
   double sumpt = 0. ; 
   double sumnch = 0. ; 
   double sumnchsq = 0. ; 
   double sumvnvnstar = 0. ; 
+  double sum_vnvnstar_vnvnstar = 0. ; 
+  double sum_vnvnstar_vnvnstar_vnvnstar = 0. ; 
 
   for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
     int eventID = event_ID_ens[ii] ; 
@@ -1235,18 +1027,24 @@ void observables::calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n
     vnvnstar = pow(ev->get_integrated_vn(n,0),2) + pow(ev->get_integrated_vn(n,1),2) ;  
     sumpt += spt ; 
     sumvnvnstar += vnvnstar ;  
+    sum_vnvnstar_vnvnstar += vnvnstar * vnvnstar ;  
+    sum_vnvnstar_vnvnstar_vnvnstar += vnvnstar * vnvnstar * vnvnstar ;  
     sumnch += nch ; 
     sumnchsq += pow(nch,2);
   }
   
   sumpt /= event_ID_ens.size() ; 
   sumvnvnstar /= event_ID_ens.size() ; 
+  sum_vnvnstar_vnvnstar /= event_ID_ens.size() ; 
+  sum_vnvnstar_vnvnstar_vnvnstar /= event_ID_ens.size() ; 
   sumnch /= event_ID_ens.size() ; 
   sumnchsq /= event_ID_ens.size() ; 
   double avg_nch = sumnch ;                                      // <Nch>
   double variance_nch =  ( sumnchsq - sumnch * sumnch )  ;       // Var(Nch)
   double avg_mpt = sumpt ;                                       // <pt>
   double avg_vnsq = sumvnvnstar ;                                // <vn^2>
+  double avg_vnfr = sum_vnvnstar_vnvnstar  ;                     // < v2 v2* v2 v2* > 
+  double avg_vnsx = sum_vnvnstar_vnvnstar_vnvnstar  ;            // < v2 v2* v2 v2* v2 v2* > 
 
 
   // second : cov(delta pt, Nch) and cov(delta vn^2, Nch) //
@@ -1292,7 +1090,13 @@ void observables::calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n
   double sum_dptcu_dvnsq=0.; 
   double sum_dpt4_dvnsq=0.; 
   double sum_dpt_dvnsq_dvnsq=0.;
-   
+  double sum_dpt_dvnsq_dvnsq_dvnsq=0.;
+  
+  // required for sixth moment
+  double sum_deltanch3 = 0 ; 
+  double sum_vnsq_deltanchSq = 0 ; 
+  double sum_vnsqSq_deltanch = 0 ; 
+    
   double deltapt_tilde, delta_vnsq_tilde;
   for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
     int eventID = event_ID_ens[ii] ; 
@@ -1310,6 +1114,12 @@ void observables::calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n
     sum_dptcu_dvnsq +=  pow(deltapt_tilde,3.)*(delta_vnsq_tilde);
     sum_dpt4_dvnsq  +=  pow(deltapt_tilde,4.)*(delta_vnsq_tilde);
     sum_dpt_dvnsq_dvnsq += (deltapt_tilde)*(delta_vnsq_tilde)*(delta_vnsq_tilde);
+    sum_dpt_dvnsq_dvnsq_dvnsq += (deltapt_tilde)*(delta_vnsq_tilde)*(delta_vnsq_tilde)*(delta_vnsq_tilde);
+    
+    // required for sixth moment
+    sum_deltanch3 += ( nch - avg_nch ) * ( nch - avg_nch ) * ( nch - avg_nch ) ;  // < (dC)^3 >
+    sum_vnsq_deltanchSq += vnvnstar * ( nch - avg_nch ) * ( nch - avg_nch ) ; //  < A * (dC)^2 >
+    sum_vnsqSq_deltanch += vnvnstar * vnvnstar * ( nch - avg_nch ) ; //  < A^2 * (dC) >
   }
   
   sum_dvn2sq /= event_ID_ens.size() ; 
@@ -1320,37 +1130,84 @@ void observables::calculate_meanpt_vnsq_higher_moments_mult_fluc_corrected(int n
   sum_dptcu_dvnsq /= event_ID_ens.size() ; 
   sum_dpt4_dvnsq /= event_ID_ens.size() ; 
   sum_dpt_dvnsq_dvnsq /= event_ID_ens.size() ; 
+  sum_dpt_dvnsq_dvnsq_dvnsq /= event_ID_ens.size() ; 
+  
+  // required for sixth moment
+  sum_deltanch3 /= event_ID_ens.size() ;  // < (dC)^3 >
+  sum_vnsq_deltanchSq /= event_ID_ens.size() ; //  < A * (dC)^2 >
+  sum_vnsqSq_deltanch /= event_ID_ens.size() ; //  < A^2 * (dC) >
 
   double sigma_pt = sqrt(sum_dptsq);
   double sigma_vnsq = sqrt(sum_dvn2sq);
+
+
+  // multiplicity fluctuation coorected <vn^k>
+  double _alpha_ = cov_deltavnsq_nch / variance_nch ; 
+  // <vn^2> 
+  double _la_vn_square_ra_ = avg_vnsq ; // <vn^2> not affected by multiplciity fluctutaion correction
+  // <vn^4> 
+  double _la_vn_four_ra_ =  avg_vnfr - _alpha_* _alpha_ * variance_nch ; 
+  // <vn^6> 
+  double _la_vn_six_ra_  =  avg_vnsx + 3 * pow(_alpha_,2) * sum_vnsq_deltanchSq 
+     - 3 * _alpha_ * sum_vnsqSq_deltanch - pow(_alpha_,3) * sum_deltanch3  ; 
+
+  // percentage change in <vn^4>
+  double percent_change_vn4 =
+    fabs((_la_vn_four_ra_ - avg_vnfr) / avg_vnfr) * 100.0;
+
+  // percentage change in <vn^6>
+  double percent_change_vn6 =
+    fabs((_la_vn_six_ra_ - avg_vnsx) / avg_vnsx) * 100.0;
+
+  if (percent_change_vn4 > 8.0) {
+    std::cout << "More than 8(%) change in <vn^4>: "
+              << percent_change_vn4 << "%" << std::endl;
+  }
+
+  if (percent_change_vn6 > 8.0) {
+    std::cout << "More than 8(%) change in <vn^6>: "
+              << percent_change_vn6 << "%" << std::endl;
+  }
+
+
+  double c2 = _la_vn_square_ra_ ; 
+  double c4 = _la_vn_four_ra_ - 2 * _la_vn_square_ra_ * _la_vn_square_ra_ ; 
+  double c6 = _la_vn_six_ra_ + 12 * pow(_la_vn_square_ra_,3) - 9 * _la_vn_four_ra_ * _la_vn_square_ra_ ; 
+
 
   double num ; 
   double den ;
    
   num = sum_dpt_dvnsq ; 
-  den = pow(sigma_pt,1) * sigma_vnsq ;
+  den = pow(sigma_pt,1) * c2 ;
   Cov11 = num  ; 
   rho11 = num / den ; 
   
   num = sum_dptsq_dvnsq ; 
-  den = pow(sigma_pt,2) * sigma_vnsq ;
+  den = pow(sigma_pt,2) * c2 ;
   Cov21 = num  ; 
   rho21 = num / den ; 
 
   num = sum_dptcu_dvnsq - 3 * sum_dptsq * sum_dpt_dvnsq ; 
-  den = pow(sigma_pt,3) * sigma_vnsq ;
+  den = pow(sigma_pt,3) * c2 ;
   Cov31 = num  ; 
   rho31 = num / den ; 
 
   num = sum_dpt4_dvnsq - 6 * sum_dptsq *  sum_dptsq_dvnsq - 4 * sum_dptcu * sum_dpt_dvnsq ; 
-  den = pow(sigma_pt,4) * sigma_vnsq ;
+  den = pow(sigma_pt,4) * c2 ;
   Cov41 = num  ; 
   rho41 = num / den ; 
 
   num = sum_dpt_dvnsq_dvnsq - 2 * avg_vnsq * sum_dpt_dvnsq ; 
-  den = pow(sigma_pt,1) * pow(sigma_vnsq,2);
-  Cov122 = num  ; 
-  rho122 = num / den ; 
+  den = pow(sigma_pt,1) * c4;
+  Cov12 = num  ; 
+  rho12 = num / den ; 
+
+  num = sum_dpt_dvnsq_dvnsq_dvnsq - 6 * avg_vnsq * sum_dpt_dvnsq_dvnsq 
+     + 12 * sum_dpt_dvnsq * avg_vnsq * avg_vnsq - 9 * sum_dpt_dvnsq * sum_dvn2sq  ; 
+  den = pow(sigma_pt,1) * c6 ;
+  Cov13 = num  ; 
+  rho13 = num / den ; 
 
 }
 
@@ -1639,7 +1496,7 @@ void observables::calculate_v0_vn_in_both_w_and_wo_mult_fluc_correction(int n, s
 
 
 
-void observables::output_relation_23(int n){
+void observables::output_relation(int n){
 
  // create an ensemble
  std::vector<int> event_ID_ens;
@@ -1648,22 +1505,17 @@ void observables::output_relation_23(int n){
  double sumWsq = 0 ; 
  double sumX = 0 ; 
  double sumXsq = 0 ; 
- double sumY = 0 ; 
- double sumYsq = 0 ; 
 
- double rho11, rho122, r23;
+ double r40, r41;
 
- 
  for(int ii=0; ii<rmof->get_total_music_events(); ii++){
     event_ID_ens = get_an_event_ensemble();
     // calculate correlation of a given ensemble
-    calculate_relation_23(n,event_ID_ens, rho11, rho122, r23);
-    sumW  += rho11 ; 
-    sumWsq += pow(rho11,2); 
-    sumX  += rho122 ; 
-    sumXsq += pow(rho122,2); 
-    sumY  += r23 ; 
-    sumYsq += pow(r23,2); 
+    calculate_relation(n,event_ID_ens, r40, r41);
+    sumW  += r40 ; 
+    sumWsq += pow(r40,2); 
+    sumX  += r41 ; 
+    sumXsq += pow(r41,2); 
  }
  
   
@@ -1675,7 +1527,7 @@ void observables::output_relation_23(int n){
 
   // write to file
   output_filename.str("");
-  output_filename << "results/relation_23_v" << n ;
+  output_filename << "results/relation_v" << n ;
   output_filename << "_pt_";
   output_filename << ptmin << "_" << ptmax ;
   if(yflag==1){
@@ -1687,7 +1539,7 @@ void observables::output_relation_23(int n){
   output_filename << rapmin << "_" << rapmax ;
   output_filename << ".dat";
   mFile.open(output_filename.str().c_str(), std::ios::out );
-  mFile << "#rho(1,1)   error   rho(1,2,2)   error  r23   error" 
+  mFile << "#r40   error   r41   error" 
   << std::endl ;
 
   val = sumW / rmof->get_total_music_events() ; 
@@ -1698,10 +1550,6 @@ void observables::output_relation_23(int n){
   err = sqrt( sumXsq / rmof->get_total_music_events() - pow(val,2) ) ; 
   mFile << val << "  " << err << "  " ; 
 
-  val = sumY / rmof->get_total_music_events() ; 
-  err = sqrt( sumYsq / rmof->get_total_music_events() - pow(val,2) ) ; 
-  mFile << val << "  " << err << "  " ; 
-   
   mFile << std::endl ; 
   mFile.close();
   
@@ -1709,8 +1557,8 @@ void observables::output_relation_23(int n){
 
 
 
-void observables::calculate_relation_23(int n, std::vector<int> event_ID_ens, 
-    double& rho11, double& rho122, double& r23 ){
+void observables::calculate_relation(int n, std::vector<int> event_ID_ens, 
+    double& r40, double& r41 ){
 
    // frequently used variables, globally declare karagala.
    // allocation inside loop takes time.
@@ -1827,13 +1675,9 @@ void observables::calculate_relation_23(int n, std::vector<int> event_ID_ens,
   double den ;
    
   num = sum_dpt_dvnsq ; 
-  den = pow(sigma_pt,1) * sigma_vnsq ;
-  rho11 = num / den ; 
+  den = pow(sigma_pt,1) * avg_vnsq ;
+  double rho11 = num / den ; 
  
-  num = sum_dpt_dvnsq_dvnsq - 2 * avg_vnsq * sum_dpt_dvnsq ; 
-  den = pow(sigma_pt,1) * pow(sigma_vnsq,2);
-  rho122 = num / den ; 
-  
   if(vn_2part_sq<0 ){
    std::cout << "vn{2}^2 < 0" << std::endl ; 
    exit(-1);
@@ -1843,10 +1687,111 @@ void observables::calculate_relation_23(int n, std::vector<int> event_ID_ens,
    exit(-1);
   }
 
-  //r23 = - 4 * vn{4}^4  ( <vn*vnstar> - vn{4}^2 ) / sigma_vn_vnstar^3  * rho([pt],vnvnstar) 
-  r23 =  -4. * vn_4part_fr * ( vn_2part_sq - pow(vn_4part_fr,0.5) ) / pow(sigma_vnsq,3) * rho11 ;
+  //r40 =  4 * <vn^2> / ( <vn*vnstar> + vn{4}^2 )  * rho([pt],vnvnstar) 
+  r40 =  4. * avg_vnsq  /  ( avg_vnsq + pow(vn_4part_fr,0.5) )  * rho11 ;
+  r41 =  6. * avg_vnsq  /  ( avg_vnsq + pow(vn_4part_fr,0.5) )  * rho11 ;
+}
+
+
+
+
+void observables::output_moments_vn(int n){
+
+ // create an ensemble
+ std::vector<int> event_ID_ens;
+ 
+ double sumW = 0 ; 
+ double sumWsq = 0 ; 
+ double sumX = 0 ; 
+ double sumXsq = 0 ; 
+ double sumY = 0 ; 
+ double sumYsq = 0 ; 
+
+ double v2, v4, v6 ;
+
+ for(int ii=0; ii<rmof->get_total_music_events(); ii++){
+    event_ID_ens = get_an_event_ensemble();
+    // calculate correlation of a given ensemble
+    calculate_moments_vn(n,event_ID_ens, v2, v4, v6);
+    sumW  += v2 ; 
+    sumWsq += pow(v2,2); 
+    sumX  += v4 ; 
+    sumXsq += pow(v4,2); 
+    sumY  += v6 ; 
+    sumYsq += pow(v6,2); 
+ }
+ 
+  
+  std::ofstream mFile;
+  std::stringstream output_filename;
+
+  double val;
+  double err;
+
+  // write to file
+  output_filename.str("");
+  output_filename << "results/Moments_of_v" << n ;
+  output_filename << "_pt_";
+  output_filename << ptmin << "_" << ptmax ;
+  if(yflag==1){
+   output_filename << "_y_" ;
+  }
+  else{
+   output_filename << "_eta_" ;
+  }
+  output_filename << rapmin << "_" << rapmax ;
+  output_filename << ".dat";
+  mFile.open(output_filename.str().c_str(), std::ios::out );
+  mFile << "#<v^2>   error   <v^4>   error   <v^6>   error" 
+  << std::endl ;
+
+  val = sumW / rmof->get_total_music_events() ; 
+  err = sqrt( sumWsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ; 
+
+  val = sumX / rmof->get_total_music_events() ; 
+  err = sqrt( sumXsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ; 
+
+  val = sumY / rmof->get_total_music_events() ; 
+  err = sqrt( sumYsq / rmof->get_total_music_events() - pow(val,2) ) ; 
+  mFile << val << "  " << err << "  " ; 
+
+  mFile << std::endl ; 
+  mFile.close();
   
 }
+
+
+
+
+void observables::calculate_moments_vn(int n, std::vector<int> event_ID_ens, double& v2 , double& v4 , double& v6  ){
+  double sumvnvnstar = 0 ; 
+  double sum_vnvnstar_vnvnstar = 0 ; 
+  double sum_vnvnstar_vnvnstar_vnvnstar = 0 ; 
+
+  double vnvnstar ; 
+
+  for(long unsigned int ii=0; ii<event_ID_ens.size(); ii++){
+    int eventID = event_ID_ens[ii] ; 
+    event* ev = rmof->get_event(eventID) ; 
+    vnvnstar = pow(ev->get_integrated_vn(n,0),2) + pow(ev->get_integrated_vn(n,1),2) ;  
+    sumvnvnstar += vnvnstar ;  
+    sum_vnvnstar_vnvnstar += vnvnstar * vnvnstar ;  
+    sum_vnvnstar_vnvnstar_vnvnstar += vnvnstar * vnvnstar * vnvnstar ;  
+  }
+ 
+  sumvnvnstar /= event_ID_ens.size() ;  // <vn vn*>
+  sum_vnvnstar_vnvnstar /= event_ID_ens.size() ;  // <vn vn* vn vn*>
+  sum_vnvnstar_vnvnstar_vnvnstar /= event_ID_ens.size() ;  // <vn vn* vn vn* vn vn*>
+
+  v2 = sumvnvnstar ; 
+  v4 = sum_vnvnstar_vnvnstar ; 
+  v6 = sum_vnvnstar_vnvnstar_vnvnstar ; 
+}
+
+
+
 
 
 
